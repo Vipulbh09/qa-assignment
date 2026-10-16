@@ -1,0 +1,55 @@
+name: e2e
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 3 * * *'   # nightly full run
+  workflow_dispatch:
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: automation
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: automation/package-lock.json
+
+      - name: Start Astronomy Shop
+        run: ../scripts/start-demo.sh
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run typecheck
+
+      - name: Run tests
+        # PRs run the fast smoke subset; main, nightly and manual runs run everything.
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npm run test:smoke
+          else
+            npm test
+          fi
+
+      - name: Dump service logs on failure
+        if: failure()
+        working-directory: .demo
+        run: docker compose logs --no-color --tail=200 > ../automation/test-results/docker-logs.txt || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: |
+            automation/playwright-report
+            automation/test-results
+          retention-days: 14

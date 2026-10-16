@@ -1,0 +1,9 @@
+# Demo checkout lives outside version control (pinned by scripts/start-demo.sh)
+.demo/
+
+node_modules/
+automation/test-results/
+automation/playwright-report/
+automation/blob-report/
+.DS_Store
+.env.local
