@@ -1,0 +1,99 @@
+# Flow 2: Payment validation and decline handling
+
+`PaymentService.Charge` (`src/payment/charge.js`) validates the card (Luhn check, Visa/MasterCard only, not expired) and charges. A decline surfaces through checkout → frontend `/api/checkout` (HTTP 422, `PAYMENT_FAILED`) → UI.
+
+---
+
+## TC-PAY-01: Card validation matrix (API)
+
+| Field | Value |
+|---|---|
+| Priority | P1 |
+| Automation | Automated (API, data-driven) |
+| Preconditions | Stack healthy; `paymentFailure` flag `off`; one item in cart per row, fresh `userId` |
+
+| # | Card | Expiry | Expected result |
+|---|---|---|---|
+| 1 | Visa `4432-8015-6152-0454` | 01/2030 | 200, order placed |
+| 2 | MasterCard `5555-5555-5555-4444` | 01/2030 | 200, order placed |
+| 3 | Amex `378282246310005` | 01/2030 | 422 `PAYMENT_FAILED`; log says only VISA or MasterCard accepted |
+| 4 | Luhn-invalid `4432-8015-6152-0455` | 01/2030 | 422 `PAYMENT_FAILED`; "Credit card info is invalid" |
+| 5 | Visa | **current month and year** | 200 (card valid through end of month) |
+| 6 | Visa | **last month** | 422 `PAYMENT_FAILED`; "expired" |
+| 7 | Visa, CVV `0` | 01/2030 | 422. **Actual: 200, FAIL (DEF-06)**: CVV is never checked |
+| 8 | Visa, month `13` | 13/2030 | 422. **Actual: 200, FAIL (DEF-06)** |
+
+**Edge cases:**
+- Card number with spaces vs. dashes vs. digits only: consistent result.
+- Month 0 via API: should be 4xx, not a 500 (month 13 is row 8).
+- Year `2030` vs `30`.
+
+**Quality risk to flag before ship:** CVV is not validated and the charge amount is not validated (no check for zero or negative totals).
+
+---
+
+## TC-PAY-02: Shopper sees a clear message when payment is declined
+
+| Field | Value |
+|---|---|
+| Priority | P1 |
+| Automation | Partial: the absence of a message is automatable; whether the message is *clear* needs a human |
+| Preconditions | One item in cart; on `/cart` |
+| Status at `ac0443b` | **FAIL (DEF-02)** |
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Set expiry to a past date (January of the current year) | n/a |
+| 2 | Click **Place Order** | Visible message explaining the payment failed and what to do; form keeps entered data; button usable again |
+| 3 | Fix expiry to 01/2030, click **Place Order** | Order succeeds |
+
+**Actual:** nothing visible happens. The page stays on `/cart` with no message; the browser logs an uncaught error "Your payment could not be processed…". See [`evidence/decline-no-feedback.png`](evidence/decline-no-feedback.png). Cause: `onPlaceOrder` in `src/frontend/components/Cart/CartDetail.tsx` has no error handling.
+
+**Edge cases:**
+- Repeated clicks after a silent failure: each one calls payment again.
+- Screen reader: the error must be announced, not just shown.
+
+**Quality risk to flag before ship:** silent failure on the money step drives abandonment and duplicate attempts.
+
+---
+
+## TC-PAY-03: Expiry date selector only offers valid dates
+
+| Field | Value |
+|---|---|
+| Priority | P3 |
+| Automation | Automated (UI) |
+| Preconditions | On `/cart` with an item |
+| Status at `ac0443b` | **FAIL (DEF-04)** |
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Open the **Year** dropdown | Starts at current year |
+| 2 | Choose current year, open **Month** | Past months are disabled, or a past selection shows an inline error before submit |
+
+**Actual:** all 12 months are selectable for the current year.
+
+**Quality risk to flag before ship:** low on its own; it feeds directly into DEF-02.
+
+---
+
+## TC-PAY-04: Payment service failure (injected)
+
+| Field | Value |
+|---|---|
+| Priority | P2 |
+| Automation | Automated (API + flagd toggle) |
+| Preconditions | Stack healthy. There is no 100% variant of `paymentFailure`; the highest is labelled `90%` (its value is actually **0.95**, see edge cases). |
+
+| # | Step | Expected result |
+|---|---|---|
+| 1 | Set `paymentFailure` = `90%` via `/feature` | Flag saved |
+| 2 | Place 20 orders via API | Most return 422 `PAYMENT_FAILED`; none return 500; no order created for failed ones |
+| 3 | Set `paymentUnreachable` = `on`, place 1 order | 500 with a generic message (not 422): the frontend must not tell the shopper to "check card details" when the service is down |
+| 4 | Reset both flags to `off` | Orders succeed again |
+
+**Edge cases:**
+- The `90%` variant is configured as `0.95` in `src/flagd/demo.flagd.json`. Label and value disagree. Minor, but tests asserting a 90% rate would be wrong.
+- The flag is probabilistic, so assert on a range, not an exact count, or the test becomes flaky.
+
+**Quality risk to flag before ship:** whether a decline vs. an outage is distinguished correctly decides what the shopper is told.

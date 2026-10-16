@@ -21,5 +21,7 @@ export default defineConfig({
   projects: [
     { name: 'api', testDir: './tests/api' },
     { name: 'ui', testDir: './tests/ui', use: { ...devices['Desktop Chrome'] } },
+    // Fault injection flips global flagd flags, so it runs alone, after everything else.
+    { name: 'faults', testDir: './tests/faults', dependencies: ['api', 'ui'], fullyParallel: false },
   ],
 });
