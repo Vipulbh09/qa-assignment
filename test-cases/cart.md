@@ -9,8 +9,8 @@ Cart service (.NET) stores carts in Valkey, keyed by `userId`. The `userId` is a
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Automation | Automated (API round-trip already in `automation/tests/api/smoke.spec.ts`; UI part to add) |
-| Preconditions | Fresh browser session |
+| Automation status | Automated (`api/cart`, `ui/cart`; DEF-10 kept as `fixme`) |
+| Preconditions | Baseline (empty `localStorage`: the cart is tied to the `session` key there). |
 
 | # | Step | Expected result |
 |---|---|---|
@@ -35,8 +35,8 @@ Cart service (.NET) stores carts in Valkey, keyed by `userId`. The `userId` is a
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Automation | Automated (API) |
-| Preconditions | Fresh `userId` |
+| Automation status | Automated (API) |
+| Preconditions | Baseline. An API client (curl or Playwright): the UI can't send a negative or zero quantity. |
 | Status at `ac0443b` | **FAIL (DEF-03)** |
 
 | # | Step | Expected result |
@@ -61,8 +61,8 @@ Cart service (.NET) stores carts in Valkey, keyed by `userId`. The `userId` is a
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Automation | Partial: isolation is automatable; the privacy review of guessable IDs is a human judgement |
-| Preconditions | Two browser contexts A and B |
+| Automation status | Partial: isolation is automatable; the privacy review of guessable IDs is a human judgement |
+| Preconditions | Baseline. Two **isolated** browser contexts (separate profiles or incognito), not two tabs: tabs share `localStorage` and so share the cart. Docker access to stop `valkey-cart` (step 4). |
 
 | # | Step | Expected result |
 |---|---|---|

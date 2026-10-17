@@ -27,10 +27,18 @@ Observed against upstream commit `ac0443b` on 2026-10-16 (local Docker Compose).
 | **DEF-09** | S3 | JPY prices shown with fractional yen (Comet Book ¥110.69); JPY has no minor unit. | TC-CHK-03 |
 | **DEF-10** | S2 | Intermittent (2 of 10 runs): after a second add, the cart page shows a stale quantity (1, server has 3). Changing it to 2 sends a +1 delta and the cart ends at **4**. | TC-CART-01 |
 
+## Baseline preconditions (every case)
+
+Each case lists only what it needs **on top of** these three. Each one is checkable, and each one caused a false failure while I was building the suite.
+
+1. **Stack ready, not just reachable:** `GET /api/products?currencyCode=EUR` returns products (`scripts/wait-for-demo.sh` checks this). USD works earlier than EUR; the stack 504s on conversions until `product-catalog` is healthy.
+2. **All flagd flags `off`:** check `http://localhost:8080/feature`. Flags are global, so one left on makes unrelated cases fail.
+3. **A new shopper:** new `userId` (API) or empty `localStorage` (UI). The background `load-generator` is creating carts the whole time.
+
 ## Conventions
 
 - **Priority:** P1 = blocks release if failing; P2 = fix before next release; P3 = backlog.
-- **Automation:** `Automated` (fully scripted in `../automation`), `Partial` (scripted check plus a human judgement step), `Manual` (with the reason).
+- **Automation status:** `Automated` (fully scripted in `../automation`), `Partial` (scripted check plus a human judgement step), `Manual` (with the reason).
 - **Fault injection** uses flagd: UI at `http://localhost:8080/feature`, or the API `GET /feature/api/read` then `POST /feature/api/write` (the same mechanism the demo's own Cypress suite uses).
 - **Test data:** form default Visa `4432-8015-6152-0454`, CVV `672`; MasterCard `5555-5555-5555-4444`; Amex `3782-822463-10005`; Luhn-invalid `4432-8015-6152-0455`. A fresh `userId` per case. Prices come from `src/postgresql/init.sql`; EUR rate `1.1305` USD per EUR from `src/currency/src/server.cpp`.
 - **Shipping** is `8.99 × total item quantity` (`src/quote/app/routes.php`, `src/shipping/src/shipping_service.rs`).

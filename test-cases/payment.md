@@ -9,8 +9,8 @@
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Automation | Automated (API, data-driven) |
-| Preconditions | Stack healthy; `paymentFailure` flag `off`; one item in cart per row, fresh `userId` |
+| Automation status | Automated (API, data-driven) |
+| Preconditions | Baseline (`paymentFailure` and `paymentUnreachable` off, otherwise declines are random). A new shopper with one item **per row**: a successful order empties the cart. |
 
 | # | Card | Expiry | Expected result |
 |---|---|---|---|
@@ -37,8 +37,8 @@
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Automation | Partial: the absence of a message is automatable; whether the message is *clear* needs a human |
-| Preconditions | One item in cart; on `/cart` |
+| Automation status | Partial: the absence of a message is automatable; whether the message is *clear* needs a human |
+| Preconditions | Baseline. **Not January** (needs a past month in the current year). One item in cart, on `/cart`. Browser console open, since the failure only shows there. |
 | Status at `ac0443b` | **FAIL (DEF-02)** |
 
 | # | Step | Expected result |
@@ -62,8 +62,8 @@
 | Field | Value |
 |---|---|
 | Priority | P3 |
-| Automation | Automated (UI) |
-| Preconditions | On `/cart` with an item |
+| Automation status | Automated (UI) |
+| Preconditions | Baseline. **Not January.** One item in cart, on `/cart`. |
 | Status at `ac0443b` | **FAIL (DEF-04)** |
 
 | # | Step | Expected result |
@@ -82,8 +82,8 @@
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Automation | Automated (API + flagd toggle) |
-| Preconditions | Stack healthy. There is no 100% variant of `paymentFailure`; the highest is labelled `90%` (its value is actually **0.95**, see edge cases). |
+| Automation status | Automated (API + flagd toggle) |
+| Preconditions | Baseline. Access to flagd (`/feature` UI or `/feature/api/*`). **Nothing else running against the stack**: the flags affect every shopper. |
 
 | # | Step | Expected result |
 |---|---|---|

@@ -9,8 +9,8 @@
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Automation | Automated (UI + API) |
-| Preconditions | Stack healthy; flagd flags all `off`; new browser session (fresh `userId`) |
+| Automation status | Partial: API and UI automated (`api/checkout`, `ui/checkout`); step 6, reading the Jaeger trace, is manual |
+| Preconditions | Baseline. Jaeger reachable at `/jaeger` (step 6). |
 
 | # | Step | Expected result |
 |---|---|---|
@@ -35,8 +35,8 @@
 | Field | Value |
 |---|---|
 | Priority | **P1: release blocker** |
-| Automation | Automated (API: compare catalogue price with order item cost for every product) |
-| Preconditions | Stack healthy; fresh `userId` |
+| Automation status | Automated (API: compare catalogue price with order item cost for every product) |
+| Preconditions | Baseline. Currency **USD**. `GET /api/products` returns all 10 seeded products. |
 | Status at `ac0443b` | **FAIL (DEF-01)** |
 
 | # | Step | Expected result |
@@ -61,8 +61,8 @@
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Automation | Automated (API) |
-| Preconditions | Stack healthy; fresh `userId` |
+| Automation status | Automated (API) |
+| Preconditions | Baseline. `GET /api/currency` lists EUR and JPY. Rate table unchanged (EUR base, USD 1.1305, JPY 126.40): the expected values are computed from it. |
 | Status at `ac0443b` | **FAIL** for products affected by DEF-01; pass for others |
 
 | # | Step | Expected result |
@@ -89,8 +89,8 @@
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Automation | Partial: failure injection is scripted; reconciling "was the customer charged?" needs a human reading traces |
-| Preconditions | Stack healthy; ability to stop the `shipping` container mid-flow |
+| Automation status | Manual: shipping must fail *between* quote and ship within one request, which needs a fault hook in the product; reconciling "was the customer charged?" needs a human reading traces |
+| Preconditions | Baseline. Shell access to the Docker host to pause `shipping`. Jaeger reachable, to see whether the payment span succeeded. |
 
 | # | Step | Expected result |
 |---|---|---|
