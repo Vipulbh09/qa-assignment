@@ -58,7 +58,7 @@ Defect IDs and descriptions live in `helpers/data.ts` and [`../test-cases/README
 
 ## Coverage
 
-Result of the last local run (pinned demo `ac0443b`): **47 passed (34 normal + 13 known-defect), 1 fixme, 0 flaky, about 40s.**
+Result of the last local run (pinned demo `ac0443b`): **48 passed (34 normal + 14 known-defect), 1 fixme, 0 flaky, about 35s.**
 
 | Test case | Automation | Spec(s) | Not automated, and why |
 |---|---|---|---|

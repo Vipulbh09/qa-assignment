@@ -12,7 +12,7 @@ test.describe('TC-CART-01 cart lifecycle (UI)', () => {
 
     await addFromProductPage('1');
     await addFromProductPage('2');
-    // Reload before asserting: without it the page shows a stale quantity ~20% of the time (DEF-10, below).
+    // Reload before asserting: without it the page shows a stale quantity ~20% of the time (DEF-10, see bugs/DEF-10-stale-cart-quantity.md).
     await page.reload();
     // The cart line's quantity select offers 1-10; the expiry-month select (1-12) is the only other one with a 10.
     const line = page
@@ -36,9 +36,9 @@ test.describe('TC-CART-01 cart lifecycle (UI)', () => {
 });
 
 test.describe('TC-CART-01 stale cart after add (DEF-10)', () => {
-  // Observed 2 of 10 runs: server holds 3, page shows 1. Choosing 2 then sends a +1 delta, so the
-  // cart ends at 4. Intermittent, so test.fail() would flap; kept as fixme until it can be forced
-  // deterministically (e.g. by delaying the cart GET with page.route).
+  // Observed in 11 of 30 runs (37%): server holds 3, page shows 1. Choosing 2 then sends a +1 delta,
+  // so the cart ends at 4. Intermittent, so test.fail() would flap; kept as fixme until it can be
+  // forced deterministically (e.g. by delaying the cart GET with page.route). See bugs/DEF-10.
   test.fixme('cart page shows the merged quantity without a reload', async ({ page }) => {
     for (const qty of ['1', '2']) {
       await page.goto(`/product/${PRODUCTS.lensKit.id}`);

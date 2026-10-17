@@ -23,7 +23,7 @@ Cart service (.NET) stores carts in Valkey, keyed by `userId`. The `userId` is a
 
 **Edge cases:**
 - Add a product ID that doesn't exist via API: should be 4xx, not stored. **Actual: FAIL (DEF-07).** 200, then the shopper's cart returns 500 on every read.
-- Add twice from the product page, then look at the cart **without reloading**. **Actual: intermittent FAIL (DEF-10).** 2 of 10 runs show the old quantity; changing it then corrupts the cart (shopper picks 2, gets 4).
+- Add twice from the product page, then look at the cart **without reloading**. **Actual: intermittent FAIL (DEF-10).** 11 of 30 runs show the old quantity; changing it then corrupts the cart (shopper picks 2, gets 4).
 - Very large quantity (e.g. 1 000 000): shipping is 8.99 × qty, so check that totals don't overflow.
 
 **Quality risk to flag before ship:** delta-based updates mean concurrent tabs can drift; there's no "set quantity" operation.

@@ -79,6 +79,7 @@
 - Switch currency *after* adding to cart: cart re-prices consistently.
 - `currencyCode` not in the supported list (e.g. `XXX`) via API: should be a clean 4xx. **Actual: FAIL (DEF-05).** Every product is priced at 0 and an order for the $3,599 Optical Tube Assembly goes through for 0. Cause: the currency service looks up unknown codes with `std::unordered_map::operator[]`, which returns 0 instead of an error.
 - JPY: **Actual: FAIL (DEF-09)**, Comet Book shows ¥110.69.
+- After any request with an unknown code, the supported list grows (`GET /api/currency`) and the dropdown offers the bogus code: **Actual: FAIL (DEF-11)**. Restart `currency` to reset it.
 
 **Quality risk to flag before ship:** no validation of currency codes server-side. Confirmed as S1: free goods (DEF-05).
 

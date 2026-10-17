@@ -6,9 +6,9 @@
 
 I treated this as a risk exercise, not a coverage exercise: find where money and trust can break, prove it against the running system, then automate exactly that.
 
-1. **Explore before writing.** I read the code paths behind checkout, payment, currency and cart, and probed them live. That found **10 confirmed defects**, including two S1s: prices with 1–9 cents are charged wrongly ($57.08 shown, $57.80 costed), and an unsupported currency code makes **everything free** (a $3,599 item ordered and shipped for 0). Full list: [`test-cases/README.md`](test-cases/README.md).
+1. **Explore before writing.** I read the code paths behind checkout, payment, currency and cart, and probed them live. That found **11 confirmed defects**, each with a report and steps to reproduce in [`bugs/`](bugs/), including two S1s: prices with 1–9 cents are charged wrongly ($57.08 shown, $57.80 costed), and an unsupported currency code makes **everything free** (a $3,599 item ordered and shipped for 0). Full list: [`test-cases/README.md`](test-cases/README.md).
 2. **Go deep on three flows:** checkout, payment and cart. 11 test cases, each with preconditions, expected results, edge cases and the risk to flag before shipping.
-3. **Automate what pays back:** 48 Playwright tests (API, UI and flagd fault injection). 7 of 11 cases fully automated, 3 partially, 1 deliberately manual, with the reason recorded. Known defects are asserted with `test.fail()`, so the suite is green today and turns red the moment a bug is fixed.
+3. **Automate what pays back:** 49 Playwright tests (API, UI and flagd fault injection). 7 of 11 cases fully automated, 3 partially, 1 deliberately manual, with the reason recorded. Known defects are asserted with `test.fail()`, so the suite is green today and turns red the moment a bug is fixed.
 4. **Make it reproducible:** the demo is pinned to one upstream commit, and CI runs the suite against a fresh stack on every push.
 
 ### Calls I made where the brief was ambiguous
@@ -32,6 +32,7 @@ I treated this as a risk exercise, not a coverage exercise: find where money and
 |---|---|
 | [`test-strategy.md`](test-strategy.md) | Risk-based test strategy |
 | [`test-cases/`](test-cases/) | Manual test cases for the highest-risk flows |
+| [`bugs/`](bugs/) | 11 bug reports with steps to reproduce, expected vs. actual, root cause and a runnable helper script |
 | [`automation/`](automation/) | Playwright + TypeScript automation ([README](automation/README.md)) |
 | [`automation-strategy.md`](automation-strategy.md) | Tooling, team structure, CI, flakiness, test data |
 | [`agentic/`](agentic/) | Agentic QA workflow + `AGENT-DESIGN.md` + session transcript |

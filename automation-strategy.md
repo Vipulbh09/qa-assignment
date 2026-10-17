@@ -39,7 +39,7 @@ automation/
 | Trigger | Runs today | Target state | Blocks? |
 |---|---|---|---|
 | **Pull request** | `@smoke` (5 tests) against a fresh Compose stack | + contract checks for changed protos; + specs tagged with the changed pod | Yes |
-| **Push to main** | Full suite: api → ui → faults (48 tests, ~30s of test time) | Same, plus automatic revert-or-fix-forward within 1 hour | Yes |
+| **Push to main** | Full suite: api → ui → faults (49 tests, ~35s of test time) | Same, plus automatic revert-or-fix-forward within 1 hour | Yes |
 | **Nightly (03:00)** | Full suite | + Locust baseline (p95 `PlaceOrder`, catalogue); + every flagd scenario | No; raises a ticket |
 | **Manual** | Full suite (`workflow_dispatch`) | Same | No |
 | **Production** | n/a | Synthetic checkout every 5 min with `synthetic_request=true` baggage (payment skips the charge for these) | Pages on-call |

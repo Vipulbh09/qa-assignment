@@ -45,4 +45,5 @@ export const DEFECTS = {
   'DEF-07': 'Unknown product ID is accepted into the cart, then the cart returns 500',
   'DEF-08': 'Converted prices drift below a cent (209.95 -> 209.949999999)',
   'DEF-09': 'JPY prices shown with fractional yen',
+  'DEF-11': 'An unknown currency code is added to the supported-currency list for every shopper',
 } as const;

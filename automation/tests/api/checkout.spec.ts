@@ -106,6 +106,20 @@ test.describe('TC-CHK-03 non-USD currency', () => {
     if (products) for (const p of products) expect(toNanos(p.priceUsd), p.name).toBeGreaterThan(0n);
   });
 
+  test('an unknown currency code is not added to the supported list', async ({ request }) => {
+    test.fail(true, 'DEF-11');
+    // Mutates shared state: the code stays listed until the currency service restarts
+    // (`docker restart currency` locally). A random code keeps parallel runs from colliding.
+    const code = 'Q' + Math.random().toString(36).slice(2, 4).toUpperCase();
+    const before: string[] = await (await request.get('/api/currency')).json();
+    expect(before).not.toContain(code);
+
+    await request.get(`/api/products?currencyCode=${code}`);
+
+    const after: string[] = await (await request.get('/api/currency')).json();
+    expect(after).not.toContain(code);
+  });
+
   test('order in an unsupported currency is refused', async ({ request }) => {
     test.fail(true, 'DEF-05');
     const shop = new Shop(request);

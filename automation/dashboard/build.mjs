@@ -7,7 +7,7 @@
 // Usage: node dashboard/build.mjs [--results test-results/results.json] [--history in.json] [--out dist]
 // No dependencies, so CI can run it without npm install.
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -191,6 +191,13 @@ const severityRows = [['All defects', defects], ...['S1', 'S2', 'S3'].map(sv => 
   })
   .join('');
 
+// bugs/DEF-xx-<slug>.md -> link target for each defect id
+const bugFiles = existsSync(join(repo, 'bugs')) ? readdirSync(join(repo, 'bugs')).filter(f => /^DEF-\d+-.*\.md$/.test(f)) : [];
+const bugLink = id => {
+  const f = bugFiles.find(x => x.startsWith(`${id}-`));
+  return f ? `<a href="${repoUrl}/blob/main/bugs/${f}">${id}</a>` : id;
+};
+
 const SEV = { S1: ['critical', 'Critical', '!!'], S2: ['serious', 'Serious', '!'], S3: ['warning', 'Minor', '•'] };
 const knownByDefect = id => run?.knownDefectTests.filter(t => t.defect === id) ?? [];
 const defectRows = defects
@@ -205,7 +212,7 @@ const defectRows = defects
       ? `<span class="state">Open · ${tests.length} test${tests.length > 1 ? 's' : ''}</span>`
       : '<span class="state">Open · fixme</span>';
     const [cls, label, icon] = SEV[d.severity] ?? ['warning', d.severity, '•'];
-    return `<tr><td class="mono">${d.id}</td><td><span class="sev ${cls}"><span class="sev-icon" aria-hidden="true">${icon}</span>${d.severity} ${label}</span></td>
+    return `<tr><td class="mono">${bugLink(d.id)}</td><td><span class="sev ${cls}"><span class="sev-icon" aria-hidden="true">${icon}</span>${d.severity} ${label}</span></td>
       <td>${esc(d.summary)}</td><td><span class="dot ${detectionSegs.find(s => s.label === d.detectedBy)?.cls ?? 'muted-1'}"></span>${esc(d.detectedBy)}</td>
       <td class="mono">${d.testCase}</td><td>${state}</td></tr>`;
   })
@@ -393,7 +400,7 @@ footer { font-size: 12px; color: var(--muted); margin-top: 24px; }
 
 <section class="card">
   <h2>Defects and their regression tests</h2>
-  <p class="card-sub">Each defect has a test asserting the correct behaviour, wrapped in <code>test.fail()</code>. “Open · 2 tests” means two tests still fail as expected. When a bug is fixed, its test starts passing and the status changes here. DEF-10 is intermittent, so it is a <code>fixme</code> instead.</p>
+  <p class="card-sub">Each defect has a report with steps to reproduce (click the ID) and a test asserting the correct behaviour, wrapped in <code>test.fail()</code>. “Open · 2 tests” means two tests still fail as expected. When a bug is fixed, its test starts passing and the status changes here. DEF-10 is intermittent, so it is a <code>fixme</code> instead.</p>
   <div class="table-wrap"><table><thead><tr><th>ID</th><th>Severity</th><th>Defect</th><th>Detected by</th><th>Test case</th><th>Status</th></tr></thead><tbody>${defectRows}</tbody></table></div>
 </section>
 
