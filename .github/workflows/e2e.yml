@@ -53,3 +53,43 @@ jobs:
             automation/playwright-report
             automation/test-results
           retention-days: 14
+
+  dashboard:
+    # Publishes the metrics dashboard to GitHub Pages after every main/nightly/manual run,
+    # including red ones: a failing run is exactly what the dashboard should show.
+    needs: playwright
+    if: always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-report
+          path: automation
+        continue-on-error: true
+
+      - name: Fetch run history from the published site
+        run: curl -fsSL "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/history.json" -o history.json || echo '[]' > history.json
+
+      - name: Build dashboard
+        run: node automation/dashboard/build.mjs --results automation/test-results/results.json --history history.json --out site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

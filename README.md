@@ -1,5 +1,7 @@
 # QA Assignment: OpenTelemetry Astronomy Shop
 
+**📊 [QA metrics dashboard](https://vipulbh09.github.io/qa-assignment/)**: automation coverage, defects by detection source, CI pass and flaky rates. Rebuilt by CI from this repo on every push to `main`.
+
 ## Approach
 
 I treated this as a risk exercise, not a coverage exercise: find where money and trust can break, prove it against the running system, then automate exactly that.
@@ -34,6 +36,7 @@ I treated this as a risk exercise, not a coverage exercise: find where money and
 | [`automation-strategy.md`](automation-strategy.md) | Tooling, team structure, CI, flakiness, test data |
 | [`agentic/`](agentic/) | Agentic QA workflow + `AGENT-DESIGN.md` + session transcript |
 | [`REFLECTION.md`](REFLECTION.md) | Escalations, ownership, week 1 vs. month 3 |
+| [`automation/dashboard/`](automation/dashboard/) | Builds the [metrics dashboard](https://vipulbh09.github.io/qa-assignment/) from test cases, defect log and Playwright results |
 
 ## Quick start
 

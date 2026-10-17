@@ -7,3 +7,6 @@ automation/playwright-report/
 automation/blob-report/
 .DS_Store
 .env.local
+
+# Generated dashboard
+automation/dashboard/dist/

@@ -52,6 +52,10 @@ Each confirmed defect has a test that asserts the **correct** behaviour, wrapped
 
 Defect IDs and descriptions live in `helpers/data.ts` and [`../test-cases/README.md`](../test-cases/README.md). The one intermittent defect (DEF-10) is `test.fixme`, because `test.fail` would flap.
 
+## Metrics dashboard
+
+`node dashboard/build.mjs` builds `dashboard/dist/index.html` from `../test-cases/` and `test-results/results.json` (written by every run). CI publishes it to [GitHub Pages](https://vipulbh09.github.io/qa-assignment/) after each `main`, nightly or manual run, including failing ones, and keeps the last 50 runs for the pass-rate trend.
+
 ## Coverage
 
 Result of the last local run (pinned demo `ac0443b`): **47 passed (34 normal + 13 known-defect), 1 fixme, 0 flaky, about 40s.**

@@ -8,9 +8,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   // One retry in CI so a flaky pass is visible in the report ("flaky"), not hidden.
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI
-    ? [['list'], ['html', { open: 'never' }], ['junit', { outputFile: 'test-results/junit.xml' }]]
-    : [['list'], ['html', { open: 'never' }]],
+  // The JSON report feeds the metrics dashboard (dashboard/build.mjs).
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }],
+    ['json', { outputFile: 'test-results/results.json' }],
+    ...(process.env.CI ? [['junit', { outputFile: 'test-results/junit.xml' }] as const] : []),
+  ],
   use: {
     baseURL,
     // The frontend tags elements with data-cy (used by its own Cypress suite); reuse them.

@@ -14,18 +14,20 @@ Three flows, chosen from the risk map in [`../test-strategy.md`](../test-strateg
 
 Observed against upstream commit `ac0443b` on 2026-10-16 (local Docker Compose). Every defect has an automated test (see `../automation/README.md`, "Known defects").
 
-| ID | Severity | Summary | Found by |
-|---|---|---|---|
-| **DEF-01** | S1 | Order cost differs from displayed price for prices with 1–9 cents. Red Flashlight shows $57.08, order costs $57.799999999. | TC-CHK-02 |
-| **DEF-02** | S2 | Declined payment shows **no message** to the shopper; the error is an uncaught JS exception. See [`evidence/decline-no-feedback.png`](evidence/decline-no-feedback.png). | TC-PAY-02 |
-| **DEF-03** | S2 | Cart accepts negative and zero-crossing quantities (`quantity: -3` → HTTP 200, stored). Checkout is only blocked because shipping happens to reject it. | TC-CART-02 |
-| **DEF-04** | S3 | Expiry dropdown offers past months of the current year (e.g. January 2026), so the UI lets a shopper submit a card that will always be declined. | TC-PAY-03 |
-| **DEF-05** | **S1** | Unsupported currency code (e.g. `XXX`) prices **every product at 0**, and checkout accepts it: a $3,599 Optical Tube Assembly was ordered, "paid" and shipped for 0. The currency comes from the browser's `localStorage` session, so a shopper can set it. | TC-CHK-03 |
-| **DEF-06** | S2 | Payment doesn't validate CVV or expiry month range: CVV `0` and month `13` are both accepted (HTTP 200). | TC-PAY-01 |
-| **DEF-07** | S2 | Adding a non-existent product ID returns 200; after that, `GET /api/cart` for that shopper returns **500**, so the cart is broken. | TC-CART-02 |
-| **DEF-08** | S3 | Converted prices drift below a cent: $209.95 comes back as 209.949999999 (double round-trip in the currency service). | TC-CHK-02 |
-| **DEF-09** | S3 | JPY prices shown with fractional yen (Comet Book ¥110.69); JPY has no minor unit. | TC-CHK-03 |
-| **DEF-10** | S2 | Intermittent (2 of 10 runs): after a second add, the cart page shows a stale quantity (1, server has 3). Changing it to 2 sends a +1 delta and the cart ends at **4**. | TC-CART-01 |
+**Detected by** records how each defect was first found: *Manual exploration* (reading code and checking live while writing the cases), *Manual probing* (deliberate API probes while preparing the automation), or *Automated suite* (a scripted test failed first). This feeds the "bugs caught by automation" metric on the dashboard.
+
+| ID | Severity | Summary | Detected by | Test case |
+|---|---|---|---|---|
+| **DEF-01** | S1 | Order cost differs from displayed price for prices with 1–9 cents. Red Flashlight shows $57.08, order costs $57.799999999. | Manual exploration | TC-CHK-02 |
+| **DEF-02** | S2 | Declined payment shows **no message** to the shopper; the error is an uncaught JS exception. See [`evidence/decline-no-feedback.png`](evidence/decline-no-feedback.png). | Manual exploration | TC-PAY-02 |
+| **DEF-03** | S2 | Cart accepts negative and zero-crossing quantities (`quantity: -3` → HTTP 200, stored). Checkout is only blocked because shipping happens to reject it. | Manual exploration | TC-CART-02 |
+| **DEF-04** | S3 | Expiry dropdown offers past months of the current year (e.g. January 2026), so the UI lets a shopper submit a card that will always be declined. | Manual exploration | TC-PAY-03 |
+| **DEF-05** | **S1** | Unsupported currency code (e.g. `XXX`) prices **every product at 0**, and checkout accepts it: a $3,599 Optical Tube Assembly was ordered, "paid" and shipped for 0. The currency comes from the browser's `localStorage` session, so a shopper can set it. | Manual probing | TC-CHK-03 |
+| **DEF-06** | S2 | Payment doesn't validate CVV or expiry month range: CVV `0` and month `13` are both accepted (HTTP 200). | Manual probing | TC-PAY-01 |
+| **DEF-07** | S2 | Adding a non-existent product ID returns 200; after that, `GET /api/cart` for that shopper returns **500**, so the cart is broken. | Manual probing | TC-CART-02 |
+| **DEF-08** | S3 | Converted prices drift below a cent: $209.95 comes back as 209.949999999 (double round-trip in the currency service). | Automated suite | TC-CHK-02 |
+| **DEF-09** | S3 | JPY prices shown with fractional yen (Comet Book ¥110.69); JPY has no minor unit. | Manual probing | TC-CHK-03 |
+| **DEF-10** | S2 | Intermittent (2 of 10 runs): after a second add, the cart page shows a stale quantity (1, server has 3). Changing it to 2 sends a +1 delta and the cart ends at **4**. | Automated suite | TC-CART-01 |
 
 ## Baseline preconditions (every case)
 
