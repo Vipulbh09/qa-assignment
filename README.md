@@ -53,6 +53,7 @@ I treated it as a risk exercise, not a coverage exercise.
 Requires Docker (Compose v2, around 6 GB of memory) and Node.js 20 or later.
 
 ```bash
+git clone https://github.com/Vipulbh09/qa-assignment.git && cd qa-assignment
 ./scripts/start-demo.sh          # clones the demo at a pinned commit, starts it, waits until healthy
                                  # (on a laptop: LOADGEN=off ./scripts/start-demo.sh, see automation/README.md)
 cd automation && npm ci && npx playwright install chromium
