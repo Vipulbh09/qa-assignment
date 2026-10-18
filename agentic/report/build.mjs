@@ -87,6 +87,7 @@ const caseRows = ev.cases
   .map(
     c => `<details class="case"><summary><span class="tname"><span class="mono">${esc(c.id)}</span> ${c.provenance === 'real' ? '' : '<span class="tag">constructed</span>'}</span>
   <span class="sum">expected <b>${esc(label(c.expected.classification))}</b> · got <b>${esc(label(c.got.classification))}</b> ${conf(c.got.confidence)} ${badge(c.ok, 'Correct', 'Wrong')}</span></summary>
+  <p class="small" style="margin:8px 14px 0">Action ${badge(c.actionOk, 'right', 'differs')} (want ${esc(c.expected.next_action.join(' or ').replace(/_/g, ' '))}) · owner ${badge(c.ownerOk, 'right', 'differs')} (want ${esc(c.expected.owner_pod.join(' or '))}) · escalation ${badge(c.escalationOk, 'right', 'differs')} (want ${c.expected.needs_human ? 'human' : 'no human'})${c.falseDefect ? ' · ' + badge(false, '', 'false defect match') : ''}</p>
   <div class="case-body"><p class="small muted">${esc(c.testName)}</p>${resultBody(c.got, c.guardrailNotes)}</div></details>`,
   )
   .join('');
@@ -155,6 +156,9 @@ ${banner}
     ${tile('Accuracy', `${pct(ev.correct, ev.total)}%`, `${ev.correct} of ${ev.total} classified correctly`)}
     ${tile('Known defect matched', `${ev.knownDefect.matched}/${ev.knownDefect.total}`, 'cases where the right DEF-xx was named')}
     ${tile('Real bugs called flaky', String(ev.falseFlaky), 'the costly mistake: it hides bugs')}
+    ${tile('Next action right', `${ev.nextAction.action}/${ev.total}`, `owner pod ${ev.nextAction.owner}/${ev.total}, both ${ev.nextAction.both}/${ev.total}`)}
+    ${tile('False defect matches', String(ev.falseDefect.length), 'a DEF-xx named that does not apply')}
+    ${tile('Escalation decision', `${ev.escalation.right}/${ev.total}`, `${ev.escalation.missed.length} missed, ${ev.escalation.needless.length} needless`)}
     ${tile('Model time', `${Math.round(ev.modelSeconds)}s`, `${(ev.modelSeconds / Math.max(1, ev.total * ev.runsPerCase)).toFixed(1)}s per failure`)}
   </div>
   <div class="table-wrap" style="margin-top:14px"><table><caption class="small" style="text-align:left">Success bar, set before the first run</caption><tbody>${barRows}</tbody></table></div>
@@ -188,7 +192,7 @@ ${triageSection()}
     <li><b>${ev.total} cases is directional</b>, not statistically strong. Read the cases, not just the percentage.</li>
     <li><b>${constructedN} of ${ev.total} cases are constructed</b> in Playwright's real error format; only ${ev.total - constructedN} use error text captured from a real run. Real CI failures will be messier.</li>
     <li><b>The prompt was tuned on these same cases</b> (v1 scored 12/14, the fixes were made after seeing the misses), so the score is not a held-out result.</li>
-    <li><b>Only the class and the known-defect match are scored.</b> The proposed next action and owning pod are suggestions.</li>
+    <li><b>Action, owner and escalation are scored against labels I wrote</b>, where more than one answer can be acceptable. They are reported but not part of the success bar, which was fixed before the first run. The escalation labels are the most debatable.</li>
     <li>Not measured yet: agreement between the agent and a human reviewer in shadow mode.</li>
   </ul>
 </section>

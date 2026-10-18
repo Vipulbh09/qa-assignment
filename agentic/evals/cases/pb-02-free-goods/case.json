@@ -5,7 +5,14 @@
   "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > unsupported currency code is rejected, not priced at zero",
   "expected": {
     "classification": "product_bug",
-    "known_defect": "DEF-05"
+    "known_defect": "DEF-05",
+    "next_action": [
+      "file_bug"
+    ],
+    "owner_pod": [
+      "Catalogue & Pricing"
+    ],
+    "needs_human": true
   },
   "context": {
     "project": "api",

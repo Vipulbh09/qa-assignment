@@ -4,7 +4,15 @@
   "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
   "testName": "payment-failure.spec.ts > TC-PAY-04 injected payment failure > most orders decline when paymentFailure is on",
   "expected": {
-    "classification": "flaky_test"
+    "classification": "flaky_test",
+    "next_action": [
+      "fix_test",
+      "quarantine"
+    ],
+    "owner_pod": [
+      "Quality Platform"
+    ],
+    "needs_human": false
   },
   "context": {
     "project": "faults",

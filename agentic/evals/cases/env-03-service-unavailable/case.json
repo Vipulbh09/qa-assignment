@@ -4,7 +4,14 @@
   "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
   "testName": "payment.spec.ts > TC-PAY-01 card validation matrix > Mastercard is accepted",
   "expected": {
-    "classification": "environment_issue"
+    "classification": "environment_issue",
+    "next_action": [
+      "restart_env"
+    ],
+    "owner_pod": [
+      "Quality Platform"
+    ],
+    "needs_human": false
   },
   "context": {
     "project": "api",

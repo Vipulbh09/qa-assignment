@@ -29,7 +29,13 @@ interface CaseMeta {
   category: string;
   provenance: string;
   testName: string;
-  expected: { classification: Classification; known_defect?: string };
+  expected: {
+    classification: Classification;
+    known_defect?: string;
+    next_action: string[]; // acceptable action types
+    owner_pod: string[]; // acceptable owning pods
+    needs_human: boolean; // should a person look before anything is done
+  };
   context?: Partial<RunContext>;
 }
 
@@ -95,6 +101,14 @@ const s1FalseFlaky = falseFlaky.filter(h => /currenc|price|payment|charge/i.test
 const withDefect = head.filter(h => h.meta.expected.known_defect);
 const defectOk = withDefect.filter(h => h.got.known_defect === h.meta.expected.known_defect);
 const highWrong = head.filter(h => h.got.confidence === 'high' && !h.ok);
+const actionOk = head.filter(h => h.meta.expected.next_action.includes(h.got.next_action.type));
+const ownerOk = head.filter(h => h.meta.expected.owner_pod.includes(h.got.next_action.owner_pod));
+const bothOk = head.filter(h => actionOk.includes(h) && ownerOk.includes(h));
+// A defect named when the case has none, or the wrong one. Missing the right one is counted by defectOk above.
+const falseDefect = head.filter(h => h.got.known_defect && h.got.known_defect !== h.meta.expected.known_defect);
+const missedEscalation = head.filter(h => h.meta.expected.needs_human && !h.got.needs_human);
+const needlessEscalation = head.filter(h => !h.meta.expected.needs_human && h.got.needs_human);
+const escalationOk = head.length - missedEscalation.length - needlessEscalation.length;
 const unstable = rows.filter(r => new Set(r.runs.map(x => x.result.classification)).size > 1);
 const totalCost = rows.flatMap(r => r.runs).reduce((s, r) => s + (r.costUsd ?? 0), 0);
 const totalSec = rows.flatMap(r => r.runs).reduce((s, r) => s + r.durationMs, 0) / 1000;
@@ -113,6 +127,8 @@ const md = [
   `> With ${head.length} cases these numbers are directional, not statistically strong. Read the per-case table, not just the percentages. ` +
     `Cases marked *constructed* were written in Playwright's real error format but not captured from a live break.`,
   '',
+  `Next action ${actionOk.length}/${head.length} · owner pod ${ownerOk.length}/${head.length} · both ${bothOk.length}/${head.length} · false defect matches ${falseDefect.length} · escalation decision right ${escalationOk}/${head.length} (missed ${missedEscalation.length}, needless ${needlessEscalation.length}). These are reported, not part of the success bar.`,
+  '',
   `**Accuracy: ${correct}/${head.length} (${pct(correct, head.length)})** · known-defect match ${defectOk.length}/${withDefect.length} · cost ${totalCost.toFixed(2)} USD-equivalent · ${totalSec.toFixed(0)}s model time`,
   '',
   '## Success bar',
@@ -122,6 +138,11 @@ const md = [
   '| Case | Expected | Got | Confidence | Defect | Human? | OK | Source |',
   '|---|---|---|---|---|---|---|---|',
   ...head.map(h => `| ${h.meta.id} | ${h.meta.expected.classification} | ${h.got.classification} | ${h.got.confidence} | ${h.got.known_defect ?? '-'}${h.meta.expected.known_defect && h.got.known_defect !== h.meta.expected.known_defect ? ` (want ${h.meta.expected.known_defect})` : ''} | ${h.got.needs_human ? 'yes' : 'no'} | ${h.ok ? 'yes' : '**NO**'} | ${h.meta.provenance.split(':')[0]} |`),
+  '',
+  '## Action, owner and escalation',
+  '| Case | Action (want / got) | Owner (want / got) | Defect named | Escalated (want / got) |',
+  '|---|---|---|---|---|',
+  ...head.map(h => `| ${h.meta.id} | ${h.meta.expected.next_action.join(' or ')} / ${h.got.next_action.type} ${actionOk.includes(h) ? '' : '**NO**'} | ${h.meta.expected.owner_pod.join(' or ')} / ${h.got.next_action.owner_pod} ${ownerOk.includes(h) ? '' : '**NO**'} | ${h.got.known_defect ?? '-'}${falseDefect.includes(h) ? ' **FALSE**' : ''} | ${h.meta.expected.needs_human ? 'yes' : 'no'} / ${h.got.needs_human ? 'yes' : 'no'} ${missedEscalation.includes(h) ? '**MISSED**' : needlessEscalation.includes(h) ? '(needless)' : ''} |`),
   '',
   '## Per class',
   '| Class | Cases | Precision | Recall |',
@@ -159,6 +180,9 @@ const report = {
   accuracy: head.length ? correct / head.length : 0,
   knownDefect: { matched: defectOk.length, total: withDefect.length },
   falseFlaky: falseFlaky.length,
+  nextAction: { action: actionOk.length, owner: ownerOk.length, both: bothOk.length },
+  falseDefect: falseDefect.map(h => h.meta.id),
+  escalation: { right: escalationOk, missed: missedEscalation.map(h => h.meta.id), needless: needlessEscalation.map(h => h.meta.id) },
   costUsd: totalCost,
   modelSeconds: totalSec,
   bar,
@@ -173,6 +197,10 @@ const report = {
     testName: h.meta.testName,
     expected: h.meta.expected,
     ok: h.ok,
+    actionOk: actionOk.includes(h),
+    ownerOk: ownerOk.includes(h),
+    falseDefect: falseDefect.includes(h),
+    escalationOk: !missedEscalation.includes(h) && !needlessEscalation.includes(h),
     got: h.got,
     guardrailNotes: h.runs[0].guardrailNotes,
     stable: new Set(h.runs.map(x => x.result.classification)).size === 1,

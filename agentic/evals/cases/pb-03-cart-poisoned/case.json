@@ -5,7 +5,14 @@
   "testName": "cart.spec.ts > TC-CART-02 invalid quantities and products are rejected > unknown product ID is rejected and does not break the cart",
   "expected": {
     "classification": "product_bug",
-    "known_defect": "DEF-07"
+    "known_defect": "DEF-07",
+    "next_action": [
+      "file_bug"
+    ],
+    "owner_pod": [
+      "Checkout & Payments"
+    ],
+    "needs_human": false
   },
   "context": {
     "project": "api",

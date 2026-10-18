@@ -4,7 +4,14 @@
   "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
   "testName": "cart.spec.ts > TC-CART-01 cart operations (API) > adding the same product twice merges the line",
   "expected": {
-    "classification": "environment_issue"
+    "classification": "environment_issue",
+    "next_action": [
+      "restart_env"
+    ],
+    "owner_pod": [
+      "Quality Platform"
+    ],
+    "needs_human": false
   },
   "context": {
     "project": "api",

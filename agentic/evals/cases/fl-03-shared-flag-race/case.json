@@ -4,7 +4,15 @@
   "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
   "testName": "checkout.spec.ts > TC-CHK-01 happy path order (API) > order succeeds in USD",
   "expected": {
-    "classification": "flaky_test"
+    "classification": "flaky_test",
+    "next_action": [
+      "fix_test",
+      "quarantine"
+    ],
+    "owner_pod": [
+      "Quality Platform"
+    ],
+    "needs_human": false
   },
   "context": {
     "project": "api",

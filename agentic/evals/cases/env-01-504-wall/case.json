@@ -4,7 +4,14 @@
   "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
   "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > EUR price for a 1-9 cent product (Red Flashlight)",
   "expected": {
-    "classification": "environment_issue"
+    "classification": "environment_issue",
+    "next_action": [
+      "restart_env"
+    ],
+    "owner_pod": [
+      "Quality Platform"
+    ],
+    "needs_human": false
   },
   "context": {
     "project": "api",

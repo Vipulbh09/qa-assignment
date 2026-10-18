@@ -4,7 +4,16 @@
   "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
   "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > Empty Cart clears the badge",
   "expected": {
-    "classification": "flaky_test"
+    "classification": "flaky_test",
+    "next_action": [
+      "quarantine",
+      "fix_test"
+    ],
+    "owner_pod": [
+      "Checkout & Payments",
+      "Quality Platform"
+    ],
+    "needs_human": false
   },
   "context": {
     "project": "ui",

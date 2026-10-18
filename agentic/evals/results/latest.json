@@ -1,7 +1,7 @@
 {
   "promptVersion": "v2",
   "model": "sonnet",
-  "ranAt": "2026-10-18T05:42:19.806Z",
+  "ranAt": "2026-10-18T07:18:19.001Z",
   "source": "local",
   "runUrl": null,
   "runsPerCase": 1,
@@ -13,6 +13,24 @@
     "total": 5
   },
   "falseFlaky": 0,
+  "nextAction": {
+    "action": 13,
+    "owner": 13,
+    "both": 12
+  },
+  "falseDefect": [],
+  "escalation": {
+    "right": 8,
+    "missed": [],
+    "needless": [
+      "fl-01-flag-propagation",
+      "fl-02-ui-timeout",
+      "fl-03-shared-flag-race",
+      "tg-02-stale-rate",
+      "tg-03-hardcoded-price",
+      "tr-02-stale-test-fail"
+    ]
+  },
   "costUsd": 0.36084949999999993,
   "modelSeconds": 152.482,
   "bar": [
@@ -106,9 +124,20 @@
       "provenance": "constructed",
       "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > EUR price for a 1-9 cent product (Red Flashlight)",
       "expected": {
-        "classification": "environment_issue"
+        "classification": "environment_issue",
+        "next_action": [
+          "restart_env"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
       "got": {
         "classification": "environment_issue",
         "confidence": "high",
@@ -156,9 +185,20 @@
       "provenance": "constructed",
       "testName": "cart.spec.ts > TC-CART-01 cart operations (API) > adding the same product twice merges the line",
       "expected": {
-        "classification": "environment_issue"
+        "classification": "environment_issue",
+        "next_action": [
+          "restart_env"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
       "got": {
         "classification": "environment_issue",
         "confidence": "medium",
@@ -198,9 +238,20 @@
       "provenance": "constructed",
       "testName": "payment.spec.ts > TC-PAY-01 card validation matrix > Mastercard is accepted",
       "expected": {
-        "classification": "environment_issue"
+        "classification": "environment_issue",
+        "next_action": [
+          "restart_env"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
       "got": {
         "classification": "environment_issue",
         "confidence": "high",
@@ -248,9 +299,21 @@
       "provenance": "constructed",
       "testName": "payment-failure.spec.ts > TC-PAY-04 injected payment failure > most orders decline when paymentFailure is on",
       "expected": {
-        "classification": "flaky_test"
+        "classification": "flaky_test",
+        "next_action": [
+          "fix_test",
+          "quarantine"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
       "got": {
         "classification": "flaky_test",
         "confidence": "medium",
@@ -295,9 +358,22 @@
       "provenance": "constructed",
       "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > Empty Cart clears the badge",
       "expected": {
-        "classification": "flaky_test"
+        "classification": "flaky_test",
+        "next_action": [
+          "quarantine",
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Checkout & Payments",
+          "Quality Platform"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": false,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
       "got": {
         "classification": "flaky_test",
         "confidence": "low",
@@ -347,9 +423,21 @@
       "provenance": "constructed",
       "testName": "checkout.spec.ts > TC-CHK-01 happy path order (API) > order succeeds in USD",
       "expected": {
-        "classification": "flaky_test"
+        "classification": "flaky_test",
+        "next_action": [
+          "fix_test",
+          "quarantine"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
       "got": {
         "classification": "flaky_test",
         "confidence": "medium",
@@ -400,9 +488,20 @@
       "testName": "checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
       "expected": {
         "classification": "product_bug",
-        "known_defect": "DEF-01"
+        "known_defect": "DEF-01",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing"
+        ],
+        "needs_human": true
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
       "got": {
         "classification": "product_bug",
         "confidence": "high",
@@ -448,9 +547,20 @@
       "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > unsupported currency code is rejected, not priced at zero",
       "expected": {
         "classification": "product_bug",
-        "known_defect": "DEF-05"
+        "known_defect": "DEF-05",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing"
+        ],
+        "needs_human": true
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
       "got": {
         "classification": "product_bug",
         "confidence": "medium",
@@ -491,9 +601,20 @@
       "testName": "cart.spec.ts > TC-CART-02 invalid quantities and products are rejected > unknown product ID is rejected and does not break the cart",
       "expected": {
         "classification": "product_bug",
-        "known_defect": "DEF-07"
+        "known_defect": "DEF-07",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Checkout & Payments"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
       "got": {
         "classification": "product_bug",
         "confidence": "high",
@@ -546,9 +667,20 @@
       "provenance": "constructed",
       "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > quantity can be changed on the cart page",
       "expected": {
-        "classification": "test_gap"
+        "classification": "test_gap",
+        "next_action": [
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Storefront"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
       "got": {
         "classification": "test_gap",
         "confidence": "medium",
@@ -596,9 +728,21 @@
       "provenance": "constructed",
       "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > EUR price for The Comet Book",
       "expected": {
-        "classification": "test_gap"
+        "classification": "test_gap",
+        "next_action": [
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing",
+          "Quality Platform"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
       "got": {
         "classification": "test_gap",
         "confidence": "medium",
@@ -648,9 +792,22 @@
       "provenance": "constructed",
       "testName": "checkout.spec.ts > TC-CHK-01 happy path order (UI) > cart totals before placing the order",
       "expected": {
-        "classification": "test_gap"
+        "classification": "test_gap",
+        "next_action": [
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing",
+          "Checkout & Payments",
+          "Quality Platform"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
       "got": {
         "classification": "test_gap",
         "confidence": "medium",
@@ -694,9 +851,20 @@
       "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > cart page shows the merged quantity without a reload",
       "expected": {
         "classification": "product_bug",
-        "known_defect": "DEF-10"
+        "known_defect": "DEF-10",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Storefront"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": false,
+      "falseDefect": false,
+      "escalationOk": true,
       "got": {
         "classification": "product_bug",
         "confidence": "high",
@@ -750,9 +918,21 @@
       "testName": "checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
       "expected": {
         "classification": "test_gap",
-        "known_defect": "DEF-01"
+        "known_defect": "DEF-01",
+        "next_action": [
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing",
+          "Quality Platform"
+        ],
+        "needs_human": false
       },
       "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
       "got": {
         "classification": "test_gap",
         "confidence": "high",

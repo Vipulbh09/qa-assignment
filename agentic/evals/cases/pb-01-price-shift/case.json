@@ -5,7 +5,14 @@
   "testName": "checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
   "expected": {
     "classification": "product_bug",
-    "known_defect": "DEF-01"
+    "known_defect": "DEF-01",
+    "next_action": [
+      "file_bug"
+    ],
+    "owner_pod": [
+      "Catalogue & Pricing"
+    ],
+    "needs_human": true
   },
   "context": {
     "project": "api",

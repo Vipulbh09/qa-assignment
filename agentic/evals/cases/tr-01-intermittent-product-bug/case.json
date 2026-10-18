@@ -5,7 +5,14 @@
   "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > cart page shows the merged quantity without a reload",
   "expected": {
     "classification": "product_bug",
-    "known_defect": "DEF-10"
+    "known_defect": "DEF-10",
+    "next_action": [
+      "file_bug"
+    ],
+    "owner_pod": [
+      "Storefront"
+    ],
+    "needs_human": false
   },
   "context": {
     "project": "ui",
