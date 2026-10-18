@@ -16,6 +16,8 @@ Eleven defects found in the OpenTelemetry Astronomy Shop at upstream commit `ac0
 | [DEF-08](DEF-08-sub-cent-price-drift.md) | S3 | Converted prices drift below a cent | **Automated suite** | `api/checkout` |
 | [DEF-09](DEF-09-fractional-yen.md) | S3 | JPY prices shown with fractional yen | Manual probing | `api/checkout` |
 
+**Detected by** records how each defect was first found: *Manual exploration* (reading code and checking live while writing the test cases), *Manual probing* (deliberate API probes while preparing the automation), or *Automated suite* (a scripted test failed first). It feeds the "bugs caught by automation" metric on the dashboard.
+
 **Severity:** S1 = money or data wrong for customers, release blocker; S2 = a customer-visible failure or a safety net that only holds by accident; S3 = minor or cosmetic.
 
 **Five of these share one root area.** DEF-01, DEF-05, DEF-08, DEF-09 and DEF-11 all come from the currency service's conversion code (`src/currency/src/server.cpp`): a digit-by-digit nanos reader, an inserting map lookup, a float round-trip, and no per-currency decimals. That makes it one decision for leadership (see [`../REFLECTION.md`](../REFLECTION.md)), not five separate bugs.

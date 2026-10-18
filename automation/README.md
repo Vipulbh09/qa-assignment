@@ -101,7 +101,7 @@ Each confirmed defect has a test that asserts the **correct** behaviour and star
 - While the bug exists, the test **fails for real**. It is red in the list output, the Playwright report and the Allure report, tagged with the DEF id, a link to the bug report and (for UI tests) a screenshot and trace.
 - `scripts/gate.mjs` decides whether CI passes (`npm test` runs it after the tests): a failure on a known defect is accepted and listed, any other failure blocks, and a known-defect test that **passes** blocks too, because the bug is fixed and the marker must be removed.
 
-Defect IDs and descriptions live in `helpers/data.ts` and [`../test-cases/README.md`](../test-cases/README.md). The one intermittent defect (DEF-10) is `test.fixme`, because a known-defect test would flap.
+Defect IDs and descriptions live in `helpers/data.ts` and [`../bugs/README.md`](../bugs/README.md). The one intermittent defect (DEF-10) is `test.fixme`, because a known-defect test would flap.
 
 ## Metrics dashboard
 

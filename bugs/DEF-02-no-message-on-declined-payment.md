@@ -35,7 +35,6 @@ A visible message that the payment failed and what to do (for example, the text 
 ## Actual
 - The page stays on `/cart`. Nothing on it mentions an error (checked: no text matching "could not be processed", "declined", "expired" or "try again").
 - The browser console shows an uncaught error: `Your payment could not be processed. Please check your card details and try again.`
-- Evidence: [`test-cases/evidence/decline-no-feedback.png`](../test-cases/evidence/decline-no-feedback.png).
 
 ## Impact
 The shopper cannot tell whether the order went through, failed, or is still loading. Expect repeated clicks (each one calls payment again), abandoned carts and support contacts, on the most valuable step of the journey.

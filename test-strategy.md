@@ -17,7 +17,7 @@ The automation follows the same ranking. The first suites cover price integrity,
 
 ## 2. Where the quality risk is
 
-Risk = **business impact × likelihood × how late we'd find out**. All defects found along the way are listed in [`test-cases/README.md`](test-cases/README.md):
+Risk = **business impact × likelihood × how late we'd find out**. All defects found along the way are listed in [`bugs/README.md`](bugs/README.md):
 
 | # | Area | Why it's high risk |
 |---|---|---|

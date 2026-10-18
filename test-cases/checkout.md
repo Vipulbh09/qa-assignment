@@ -2,6 +2,13 @@
 
 `POST /api/checkout` → `CheckoutService.PlaceOrder`, which calls cart → product-catalog → currency → shipping/quote → **payment (charge)** → shipping (ship) → cart (empty) → email.
 
+**Baseline** (every case assumes these, and lists only what it needs on top):
+1. **Stack ready, not just reachable:** `GET /api/products?currencyCode=EUR` returns products (`scripts/wait-for-demo.sh` checks this). USD works earlier than EUR.
+2. **All flagd flags `off`:** check `http://localhost:8080/feature`. Flags are global, so one left on makes unrelated cases fail.
+3. **A new shopper:** new `userId` (API) or empty `localStorage` (UI). The background `load-generator` creates carts the whole time.
+
+**Priority:** P1 = blocks release if failing; P2 = fix before next release; P3 = backlog. **Automation status:** `Automated` (fully scripted in `../automation`), `Partial` (scripted check plus a human judgement step), `Manual` (with the reason). Defects are in [`../bugs/`](../bugs/).
+
 ---
 
 ## TC-CHK-01: Happy path order in USD

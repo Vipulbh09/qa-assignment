@@ -1,6 +1,6 @@
 // Builds the QA metrics dashboard (a single static HTML page) from files in this repo:
 //   test-cases/*.md            -> automation coverage ("Automation status" field)
-//   test-cases/README.md       -> defects, severity, "Detected by"
+//   bugs/README.md             -> defects, severity, "Detected by"; bugs/DEF-*.md -> the test case each one belongs to
 //   automation/test-results/results.json     -> pass rate, flaky rate, known-defect tests (Playwright JSON reporter)
 //   history.json (optional)       -> previous CI runs, for the trend
 //
@@ -45,11 +45,15 @@ if (!cases.length) throw new Error('No test cases parsed from test-cases/*.md');
 // ---------- 2. Defects ----------
 
 const plain = s => s.replace(/\*\*|`/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').trim();
-const readme = readFileSync(join(repo, 'test-cases', 'README.md'), 'utf8');
-const defects = [...readme.matchAll(/^\| \*\*(DEF-\d+)\*\* \| (?:\*\*)?(S\d)(?:\*\*)? \| (.+?) \| (.+?) \| (TC-[A-Z]+-\d+) \|$/gm)].map(
-  m => ({ id: m[1], severity: m[2], summary: plain(m[3]), detectedBy: m[4], testCase: m[5] })
+const readme = readFileSync(join(repo, 'bugs', 'README.md'), 'utf8');
+const testCaseOf = id => {
+  const file = readdirSync(join(repo, 'bugs')).find(f => f.startsWith(`${id}-`));
+  return (file && readFileSync(join(repo, 'bugs', file), 'utf8').match(/^\| \*\*Test case\*\* \| (TC-[A-Z]+-\d+)/m)?.[1]) || '';
+};
+const defects = [...readme.matchAll(/^\| \[(DEF-\d+)\]\([^)]*\) \| \**(S\d)\** \| (.+?) \| (.+?) \| .+ \|$/gm)].map(
+  m => ({ id: m[1], severity: m[2], summary: plain(m[3]), detectedBy: plain(m[4]), testCase: testCaseOf(m[1]) })
 );
-if (!defects.length) throw new Error('No defects parsed from test-cases/README.md');
+if (!defects.length) throw new Error('No defects parsed from bugs/README.md');
 
 // ---------- 3. Playwright results ----------
 
@@ -394,7 +398,7 @@ footer { font-size: 12px; color: var(--muted); margin-top: 24px; }
 
 <section class="card">
   <h2>How each defect was first found</h2>
-  <p class="card-sub">From the “Detected by” column in <code>test-cases/README.md</code>, split by severity. Exploration found both critical defects; automation found the subtle ones.</p>
+  <p class="card-sub">From the “Detected by” column in <code>bugs/README.md</code>, split by severity. Exploration found both critical defects; automation found the subtle ones.</p>
   ${severityRows}
   <div class="legend">${detectionSegs.map(s => `<span><span class="dot ${s.cls}"></span>${s.label} (${s.value})</span>`).join('')}</div>
 </section>
