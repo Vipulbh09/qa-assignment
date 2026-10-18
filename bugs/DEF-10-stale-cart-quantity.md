@@ -7,7 +7,7 @@
 | **Status** | Open. **Intermittent**: reproduced 2026-10-17 on demo commit `ac0443b` |
 | **Detected by** | **Automated suite** (a UI test failed on some runs and passed on others) |
 | **Test case** | TC-CART-01 |
-| **Regression test** | `automation/tests/ui/cart.spec.ts`: "cart page shows the merged quantity without a reload" (`test.fixme`, because an intermittent defect would make `test.fail` flap) |
+| **Regression test** | `automation/tests/ui/cart.spec.ts`: "cart page shows the merged quantity without a reload" (`test.fixme`, because an intermittent defect would make a known-defect test flap) |
 
 ## Summary
 After adding the same product twice, the cart page **sometimes shows the first quantity** (1) while the server already holds the total (3). If the shopper then changes the quantity from that stale view, the cart ends at the wrong number.

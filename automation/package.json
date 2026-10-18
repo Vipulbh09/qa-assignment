@@ -3,7 +3,7 @@
   "private": true,
   "description": "API and UI automation for the OpenTelemetry Astronomy Shop",
   "scripts": {
-    "test": "playwright test",
+    "test": "playwright test; node scripts/gate.mjs",
     "test:api": "playwright test --project=api",
     "test:ui": "playwright test --project=ui",
     "test:smoke": "playwright test --grep @smoke",
@@ -12,7 +12,8 @@
     "allure:open": "allure open allure-report",
     "typecheck": "tsc --noEmit",
     "lint:pom": "node scripts/check-pom.mjs",
-    "check": "npm run typecheck && npm run lint:pom"
+    "check": "npm run typecheck && npm run lint:pom",
+    "gate": "node scripts/gate.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

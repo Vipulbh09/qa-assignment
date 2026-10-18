@@ -7,7 +7,7 @@
 | **Status** | Open. Reproduced 2026-10-17 on demo commit `ac0443b` |
 | **Detected by** | Manual exploration |
 | **Test case** | TC-PAY-03 |
-| **Regression test** | `automation/tests/ui/payment.spec.ts`: "past months of the current year cannot be selected" (`test.fail('DEF-04')`) |
+| **Regression test** | `automation/tests/ui/payment.spec.ts`: "past months of the current year cannot be selected" (`knownDefect('DEF-04')`) |
 
 ## Summary
 After choosing the current year, all 12 months can still be selected, so the shopper can pick a month that is already in the past. The card is then always declined (DEF-02), and with no message.

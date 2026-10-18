@@ -63,6 +63,12 @@ test('signals: stale test.fail annotation and flaky-on-retry', () => {
   assert.ok(flaky.some(x => x.id === 'flaky-passed-on-retry'));
 });
 
+test('signals: a failing knownDefect test is flagged as the documented bug', () => {
+  const input = { testName: 't', log: 'x', gitDiff: '' };
+  const s = detectSignals(input, { siblingFailures: [], unhealthyContainers: [], status: 'unexpected', annotations: [{ type: 'defect', description: 'DEF-03' }] });
+  assert.ok(s.some(x => x.id === 'known-defect-test-failing'));
+});
+
 test('signals: diff limited to automation/ is flagged as test-only', () => {
   const p = collectEvidence({ testName: 't', log: 'x', gitDiff: 'diff --git a/automation/pages/CartPage.ts b/automation/pages/CartPage.ts\n' });
   assert.ok(p.signals.some(s => s.id === 'diff-touches-page-objects'));

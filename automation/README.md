@@ -1,12 +1,13 @@
 # Automation
 
-Playwright + TypeScript, built on the **Page Object Model**. Three projects:
+Playwright + TypeScript, built on the **Page Object Model**. Two kinds of tests, `api` and `ui`:
 
 | Project | Folder | What it covers | Runs |
 |---|---|---|---|
 | `api` | `tests/api` | Frontend REST routes (`/api/*`), which call the backend gRPC services | In parallel |
 | `ui`  | `tests/ui`  | Browser flows through the storefront | In parallel |
-| `faults` | `tests/faults` | flagd fault injection (payment failures) | Serially, **after** `api` and `ui`, because flags are global to the stack |
+
+Fault injection (flagd) is an API test too, so it lives in `tests/api`. Any spec there named `*.serial.spec.ts` changes global flags, so Playwright runs it alone, after everything else (the `api-serial` project in `playwright.config.ts`).
 
 ## Structure: tests describe, page objects do
 
@@ -22,7 +23,7 @@ automation/
     FlagdApi.ts             feature flags; remembers what it changed and restores it
   fixtures/index.ts       hands page objects and API clients to tests (Playwright fixtures)
   helpers/                test data (data.ts) and exact money maths (money.ts)
-  tests/                  scenarios and assertions only: api/, ui/, faults/
+  tests/                  scenarios and assertions only: api/, ui/
   scripts/check-pom.mjs   fails the build if a test breaks the rules below
 ```
 
@@ -65,7 +66,7 @@ npx playwright install chromium
 
 npm test              # everything
 npm run test:smoke    # @smoke subset
-npm run test:api      # API project only
+npm run test:api      # the parallel API specs (the *.serial.spec.ts ones run only in a full `npm test`)
 npm run check         # type check + POM check (no stack needed)
 npm run report        # open the last HTML report
 
@@ -91,16 +92,16 @@ The demo stack is heavy: right after start-up the Docker VM can use several core
 - Tag fast, critical checks with `@smoke`. PRs run only those (see `.github/workflows/e2e.yml`).
 - Money is compared as integer nanos or rounded cents (`helpers/money.ts`), never floats, so the tests can't share the bug they look for.
 - Flags are changed only through `api/FlagdApi.ts`, which waits until flagd itself reports the new variant (it takes ~2s to propagate). The `flags` fixture restores every flag a test changed when the test ends, even if it fails.
-- Don't run the `faults` project with `--repeat-each` or more than one worker: repeats are spread across workers and would flip the same global flags concurrently.
+- Don't run the `api-serial` project with `--repeat-each` or more than one worker: repeats are spread across workers and would flip the same global flags concurrently.
 
 ## Known defects: how they show up in results
 
-Each confirmed defect has a test that asserts the **correct** behaviour, wrapped in `test.fail('DEF-xx')`:
+Each confirmed defect has a test that asserts the **correct** behaviour and starts with `knownDefect('DEF-xx')`:
 
-- While the bug exists, the test fails as expected and the suite stays green (the list reporter shows `✘`, counted as passed).
-- When the bug is fixed, the test starts passing, Playwright reports it as **unexpected**, and the build goes red, prompting someone to remove the `test.fail()`.
+- While the bug exists, the test **fails for real**. It is red in the list output, the Playwright report and the Allure report, tagged with the DEF id, a link to the bug report and (for UI tests) a screenshot and trace.
+- `scripts/gate.mjs` decides whether CI passes (`npm test` runs it after the tests): a failure on a known defect is accepted and listed, any other failure blocks, and a known-defect test that **passes** blocks too, because the bug is fixed and the marker must be removed.
 
-Defect IDs and descriptions live in `helpers/data.ts` and [`../test-cases/README.md`](../test-cases/README.md). The one intermittent defect (DEF-10) is `test.fixme`, because `test.fail` would flap.
+Defect IDs and descriptions live in `helpers/data.ts` and [`../test-cases/README.md`](../test-cases/README.md). The one intermittent defect (DEF-10) is `test.fixme`, because a known-defect test would flap.
 
 ## Metrics dashboard
 
@@ -119,7 +120,7 @@ Result of the last local run (pinned demo `ac0443b`): **48 passed (34 normal + 1
 | TC-PAY-01 Card validation matrix | **Automated** | `api/payment` (8 rows) | n/a |
 | TC-PAY-02 Decline message | **Partial** | `ui/payment` | Automation checks a message appears; whether it is *clear and actionable* is a human call |
 | TC-PAY-03 Expiry selector | **Automated** | `ui/payment` | n/a |
-| TC-PAY-04 Injected payment failure | **Automated** | `faults/payment-failure` | n/a |
+| TC-PAY-04 Injected payment failure | **Automated** | `api/payment-failure.serial` | n/a |
 | TC-CART-01 Cart lifecycle | **Automated** | `api/cart`, `ui/cart` | n/a (DEF-10 kept as `fixme`) |
 | TC-CART-02 Invalid quantities/products | **Automated** | `api/cart` | n/a |
 | TC-CART-03 Isolation and recovery | **Partial** | `api/cart`, `ui/cart` | Stopping Valkey mid-test disrupts every parallel test; the session-takeover step is a privacy review, not a pass/fail check |

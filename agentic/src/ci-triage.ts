@@ -41,8 +41,10 @@ const dockerPs = values['docker-ps'] && existsSync(values['docker-ps']) ? resolv
 const gitDiff = values.diff && existsSync(values.diff) ? readFileSync(values.diff, 'utf8') : '';
 
 const all = flattenResults(JSON.parse(readFileSync(resultsPath, 'utf8')));
-// Red builds first, then tests that only passed on retry. Known-defect tests (status "expected") are not failures.
-const failing = [...all.filter(t => t.status === 'unexpected'), ...all.filter(t => t.status === 'flaky')];
+// Red builds first, then tests that only passed on retry. Tests marked knownDefect() fail by design (the bug is documented
+// in bugs/), so they are not triaged again: the CI gate (automation/scripts/gate.mjs) already accepts them.
+const isKnownDefect = (t: { annotations?: { type: string }[] }) => !!t.annotations?.some(a => a.type === 'defect');
+const failing = [...all.filter(t => t.status === 'unexpected' && !isKnownDefect(t)), ...all.filter(t => t.status === 'flaky')];
 const max = Number(values.max);
 const picked = failing.slice(0, max);
 

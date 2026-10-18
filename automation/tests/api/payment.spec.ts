@@ -1,4 +1,4 @@
-import { test, expect } from '../../fixtures';
+import { test, expect, knownDefect } from '../../fixtures';
 import { CARDS, PRODUCTS } from '../../helpers/data';
 import { validCard } from '../../api';
 import type { CreditCard } from '../../api';
@@ -10,7 +10,7 @@ const thisMonth = now.getMonth() + 1;
 const thisYear = now.getFullYear();
 const lastMonth = thisMonth === 1 ? { m: 12, y: thisYear - 1 } : { m: thisMonth - 1, y: thisYear };
 
-type Row = { name: string; card: Partial<CreditCard>; accepted: boolean; defect?: string };
+type Row = { name: string; card: Partial<CreditCard>; accepted: boolean; defect?: 'DEF-06' };
 
 const rows: Row[] = [
   { name: 'Visa, future expiry', card: {}, accepted: true },
@@ -34,7 +34,7 @@ const rows: Row[] = [
 test.describe('TC-PAY-01 card validation matrix', () => {
   for (const row of rows) {
     test(row.name, async ({ shop }) => {
-      test.fail(!!row.defect, row.defect);
+      if (row.defect) knownDefect(row.defect);
       await shop.addToCart(PRODUCTS.cometBook.id, 1);
 
       const res = await shop.placeOrder({ card: validCard(row.card) });

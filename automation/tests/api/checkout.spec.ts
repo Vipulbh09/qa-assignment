@@ -1,4 +1,4 @@
-import { test, expect } from '../../fixtures';
+import { test, expect, knownDefect } from '../../fixtures';
 import { PRODUCTS, SHIPPING_PER_ITEM_USD, USD_PER_EUR } from '../../helpers/data';
 import { Money, toCents, toNanos } from '../../helpers/money';
 
@@ -26,11 +26,11 @@ test.describe('TC-CHK-01 happy path order (API)', () => {
 
 test.describe('TC-CHK-02 displayed price equals charged price', () => {
   // DEF-01 is triggered by prices whose cents are 01-09: only Red Flashlight ($57.08) in the seed data.
-  const knownDefect: Record<string, string> = { [PRODUCTS.flashlight.id]: 'DEF-01' };
+  const defectFor: Record<string, 'DEF-01'> = { [PRODUCTS.flashlight.id]: 'DEF-01' };
 
   for (const product of Object.values(PRODUCTS)) {
     test(`${product.name}: order cost equals catalogue price`, async ({ shop }) => {
-      test.fail(!!knownDefect[product.id], knownDefect[product.id]);
+      if (defectFor[product.id]) knownDefect(defectFor[product.id]);
 
       const listed = (await shop.products()).find(p => p.id === product.id)!;
       await shop.addToCart(product.id, 1);
@@ -44,7 +44,7 @@ test.describe('TC-CHK-02 displayed price equals charged price', () => {
   }
 
   test('order cost is exact to the nano (no float round-trip)', async ({ shop }) => {
-    test.fail(true, 'DEF-08');
+    knownDefect('DEF-08');
     const listed = (await shop.products()).find(p => p.id === PRODUCTS.binoculars.id)!;
     await shop.addToCart(PRODUCTS.binoculars.id, 1);
     const order: Order = await (await shop.placeOrder()).json();
@@ -70,7 +70,7 @@ test.describe('TC-CHK-03 non-USD currency', () => {
   });
 
   test('EUR price for a 1-9 cent product (Red Flashlight)', async ({ shop }) => {
-    test.fail(true, 'DEF-01');
+    knownDefect('DEF-01');
     const listed = (await shop.products('EUR')).find(p => p.id === PRODUCTS.flashlight.id)!;
     expect(toCents(listed.priceUsd)).toBe(eur(PRODUCTS.flashlight.usd));
   });
@@ -87,20 +87,20 @@ test.describe('TC-CHK-03 non-USD currency', () => {
   });
 
   test('JPY prices have no fractional yen', async ({ shop }) => {
-    test.fail(true, 'DEF-09');
+    knownDefect('DEF-09');
     const products = await shop.products('JPY');
     for (const p of products) expect(p.priceUsd.nanos ?? 0, p.name).toBe(0);
   });
 
   test('unsupported currency code is rejected, not priced at zero', async ({ shop }) => {
-    test.fail(true, 'DEF-05');
+    knownDefect('DEF-05');
     const products = await shop.products('XXX').catch(() => null);
     // Either the catalogue refuses the currency, or it must not offer free goods.
     if (products) for (const p of products) expect(toNanos(p.priceUsd), p.name).toBeGreaterThan(0n);
   });
 
   test('an unknown currency code is not added to the supported list', async ({ shop }) => {
-    test.fail(true, 'DEF-11');
+    knownDefect('DEF-11');
     // Mutates shared state: the code stays listed until the currency service restarts
     // (`docker restart currency` locally). A random code keeps parallel runs from colliding.
     const code = 'Q' + Math.random().toString(36).slice(2, 4).toUpperCase();
@@ -112,7 +112,7 @@ test.describe('TC-CHK-03 non-USD currency', () => {
   });
 
   test('order in an unsupported currency is refused', async ({ shop }) => {
-    test.fail(true, 'DEF-05');
+    knownDefect('DEF-05');
     await shop.addToCart(PRODUCTS.tubeAssembly.id, 1);
     const res = await shop.placeOrder({ currency: 'XXX' });
     expect(res.status()).toBeGreaterThanOrEqual(400);

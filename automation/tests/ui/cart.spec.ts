@@ -31,9 +31,10 @@ test.describe('TC-CART-01 cart lifecycle (UI)', () => {
 
 test.describe('TC-CART-01 stale cart after add (DEF-10)', () => {
   // Observed in 11 of 30 runs (37%): server holds 3, page shows 1. Choosing 2 then sends a +1 delta,
-  // so the cart ends at 4. Intermittent, so test.fail() would flap; kept as fixme until it can be
+  // so the cart ends at 4. Intermittent, so a known-defect failure would flap; kept as fixme until it can be
   // forced deterministically (e.g. by delaying the cart GET with page.route). See bugs/DEF-10.
-  test.fixme('cart page shows the merged quantity without a reload', async ({ pages }) => {
+  // A fixme test never starts, so the automatic layer label can't run: label it here for the Allure report.
+  test.fixme('cart page shows the merged quantity without a reload', { annotation: { type: '@allure.label.parentSuite', description: 'UI' } }, async ({ pages }) => {
     const { product } = pages;
     await product.open(PRODUCTS.lensKit.id);
     await product.addToCart(1);

@@ -17,7 +17,7 @@ export default defineConfig({
     ['html', { open: 'never' }],
     ['json', { outputFile: 'test-results/results.json' }],
     // Allure results (raw), turned into a report by `npm run allure:generate`. Needs no Java (Allure 3).
-    ['allure-playwright', { resultsDir: 'allure-results', detail: true, suiteTitle: false }],
+    ['allure-playwright', { resultsDir: 'allure-results', detail: true, suiteTitle: true }],
     ...(process.env.CI ? [['junit', { outputFile: 'test-results/junit.xml' }] as const] : []),
   ],
   // Pages and API calls on a busy laptop can take longer than the 5 s default; a real failure still fails.
@@ -30,9 +30,10 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'api', testDir: './tests/api' },
+    { name: 'api', testDir: './tests/api', testIgnore: '**/*.serial.spec.ts' },
     { name: 'ui', testDir: './tests/ui', use: { ...devices['Desktop Chrome'] } },
-    // Fault injection flips global flagd flags, so it runs alone, after everything else.
-    { name: 'faults', testDir: './tests/faults', dependencies: ['api', 'ui'], fullyParallel: false },
+    // API specs named *.serial.spec.ts flip global flagd flags (fault injection), so they run alone, after
+    // everything else. They live in tests/api like any other API test; this project only controls when they run.
+    { name: 'api-serial', testDir: './tests/api', testMatch: '**/*.serial.spec.ts', dependencies: ['api', 'ui'], fullyParallel: false },
   ],
 });

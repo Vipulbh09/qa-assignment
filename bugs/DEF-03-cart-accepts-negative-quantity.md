@@ -7,7 +7,7 @@
 | **Status** | Open. Reproduced 2026-10-17 on demo commit `ac0443b` |
 | **Detected by** | Manual exploration |
 | **Test case** | TC-CART-02 |
-| **Regression tests** | `automation/tests/api/cart.spec.ts`: "negative quantity on an empty cart" and "zero quantity is not stored as a line" (both `test.fail('DEF-03')`), plus "a cart with a negative line never reaches payment" (passes today, see below) |
+| **Regression tests** | `automation/tests/api/cart.spec.ts`: "negative quantity on an empty cart" and "zero quantity is not stored as a line" (both `knownDefect('DEF-03')`), plus "a cart with a negative line never reaches payment" (passes today, see below) |
 
 ## Summary
 `POST /api/cart` stores whatever quantity it is given, including `-3` and `0`, and answers 200. The only reason a negative order does not get through is that an unrelated service happens to refuse it.

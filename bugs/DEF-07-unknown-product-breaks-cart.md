@@ -7,7 +7,7 @@
 | **Status** | Open. Reproduced 2026-10-17 on demo commit `ac0443b` |
 | **Detected by** | Manual probing |
 | **Test case** | TC-CART-02 |
-| **Regression test** | `automation/tests/api/cart.spec.ts`: "unknown product ID is rejected and does not break the cart" (`test.fail('DEF-07')`) |
+| **Regression test** | `automation/tests/api/cart.spec.ts`: "unknown product ID is rejected and does not break the cart" (`knownDefect('DEF-07')`) |
 
 ## Summary
 A product ID that does not exist is accepted into the cart (HTTP 200). After that, **every read of that shopper's cart returns HTTP 500**. The storefront then shows an **empty cart with no error**, even if the shopper adds real products, so they cannot check out.

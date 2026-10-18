@@ -11,6 +11,8 @@ export default {
       options: {
         reportName: 'Astronomy Shop: API + UI automation',
         singleFile: false,
+        // API and UI first, then the spec file, then the test case (TC-...) that the describe block is named after.
+        groupBy: ['parentSuite', 'suite', 'subSuite'],
         reportLanguage: 'en',
       },
     },

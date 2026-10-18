@@ -7,7 +7,7 @@
 | **Status** | Open. Reproduced 2026-10-17 on demo commit `ac0443b` |
 | **Detected by** | Manual exploration |
 | **Test case** | TC-PAY-02 |
-| **Regression test** | `automation/tests/ui/payment.spec.ts`: "shopper sees a message when the card is declined" (`test.fail('DEF-02')`) |
+| **Regression test** | `automation/tests/ui/payment.spec.ts`: "shopper sees a message when the card is declined" (`knownDefect('DEF-02')`) |
 
 ## Summary
 When payment is declined, the page **does nothing visible**: no message, no highlighted field, no change of page. The only trace is an uncaught error in the browser console.

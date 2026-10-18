@@ -1,8 +1,8 @@
 import { test, expect } from '../../fixtures';
 import { PRODUCTS } from '../../helpers/data';
 
-// TC-PAY-04. Flags are global to the stack: this file runs serially, after the api and ui
-// projects (see playwright.config.ts). The `flags` fixture puts every flag back when a test ends.
+// TC-PAY-04. Flags are global to the stack, so a *.serial.spec.ts file runs serially, after the other api and
+// ui tests (the `api-serial` project in playwright.config.ts). The `flags` fixture puts every flag back when a test ends.
 
 test.describe.configure({ mode: 'serial' });
 

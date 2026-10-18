@@ -7,7 +7,7 @@
 | **Status** | Open. Reproduced 2026-10-17 on demo commit `ac0443b` |
 | **Detected by** | Manual exploration |
 | **Test case** | TC-CHK-02 |
-| **Regression tests** | `automation/tests/api/checkout.spec.ts`: "Red Flashlight: order cost equals catalogue price" and "EUR price for a 1-9 cent product" (both `test.fail('DEF-01')`) |
+| **Regression tests** | `automation/tests/api/checkout.spec.ts`: "Red Flashlight: order cost equals catalogue price" and "EUR price for a 1-9 cent product" (both `knownDefect('DEF-01')`) |
 
 ## Summary
 A product priced with 1 to 9 cents is **costed higher than it is displayed**. Red Flashlight is shown at $57.08 but the order is costed at $57.80. Foreign-currency prices are wrong for the same products.

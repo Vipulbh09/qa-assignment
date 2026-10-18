@@ -7,7 +7,7 @@
 | **Status** | Open. Reproduced 2026-10-17 on demo commit `ac0443b` |
 | **Detected by** | Manual probing |
 | **Test case** | TC-PAY-01 |
-| **Regression tests** | `automation/tests/api/payment.spec.ts`: "CVV 0 is rejected" and "expiry month 13 is rejected" (both `test.fail('DEF-06')`) |
+| **Regression tests** | `automation/tests/api/payment.spec.ts`: "CVV 0 is rejected" and "expiry month 13 is rejected" (both `knownDefect('DEF-06')`) |
 
 ## Summary
 An order with **CVV `0`** or **expiry month `13`** is accepted and completed (HTTP 200). The service checks the card number, the card type and whether the date is in the past, but not that the CVV is real or that the month exists.

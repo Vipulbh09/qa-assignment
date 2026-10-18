@@ -1,9 +1,9 @@
-import { test, expect } from '../../fixtures';
+import { test, expect, knownDefect } from '../../fixtures';
 import { PRODUCTS } from '../../helpers/data';
 
 test.describe('TC-PAY-02 declined payment feedback', () => {
   test('shopper sees a message when the card is declined', async ({ pages }) => {
-    test.fail(true, 'DEF-02');
+    knownDefect('DEF-02');
     test.skip(new Date().getMonth() === 0, 'needs a past month in the current year');
     await pages.product.open(PRODUCTS.cometBook.id);
     const cart = await pages.product.addToCart();
@@ -19,7 +19,7 @@ test.describe('TC-PAY-02 declined payment feedback', () => {
 
 test.describe('TC-PAY-03 expiry selector', () => {
   test('past months of the current year cannot be selected', async ({ pages }) => {
-    test.fail(true, 'DEF-04');
+    knownDefect('DEF-04');
     test.skip(new Date().getMonth() + 1 === 1, 'no past months in January');
     await pages.product.open(PRODUCTS.cometBook.id);
     const cart = await pages.product.addToCart();

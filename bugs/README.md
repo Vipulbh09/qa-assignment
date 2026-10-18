@@ -25,7 +25,7 @@ Eleven defects found in the OpenTelemetry Astronomy Shop at upstream commit `ac0
 1. Start the demo: `./scripts/start-demo.sh` (from the repo root).
 2. For the API steps: `source bugs/lib.sh`. It defines `price`, `add`, `cart`, `order`, `currencies` and `new_shopper`, and each report shows exactly which to run. It needs `curl` and `python3`.
 3. For the UI steps: open `http://localhost:8080` in a browser. Where the browser console is needed, the report says so.
-4. Each report names the automated test that checks the **correct** behaviour. It is wrapped in `test.fail('DEF-xx')`, so it fails while the bug exists and the suite stays green; when a bug is fixed, the test starts passing and the build goes red until the annotation is removed.
+4. Each report names the automated test that checks the **correct** behaviour. It is marked with `knownDefect('DEF-xx')`, so it really fails while the bug exists and shows up red, with a screenshot for UI tests, in the Playwright and Allure reports. CI accepts those failures but fails on any new one, and also fails if a known-defect test starts passing (the bug is fixed: remove the marker).
 
 ## Things to know before you start
 

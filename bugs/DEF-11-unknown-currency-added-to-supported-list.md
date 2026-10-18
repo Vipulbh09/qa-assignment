@@ -7,7 +7,7 @@
 | **Status** | Open. Reproduced 2026-10-17 on demo commit `ac0443b` |
 | **Detected by** | Manual probing (found while writing the steps for DEF-05) |
 | **Test case** | TC-CHK-03 |
-| **Regression test** | `automation/tests/api/checkout.spec.ts`: "an unknown currency code is not added to the supported list" (`test.fail('DEF-11')`) |
+| **Regression test** | `automation/tests/api/checkout.spec.ts`: "an unknown currency code is not added to the supported list" (`knownDefect('DEF-11')`) |
 
 ## Summary
 A single anonymous request that mentions a currency code the service does not know **permanently adds that code to the list of supported currencies**, for every shopper, until the currency service restarts. The storefront then offers the bogus currency in its dropdown, and choosing it prices everything at zero (DEF-05).

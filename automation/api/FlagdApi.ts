@@ -4,7 +4,7 @@ import { APIRequestContext, expect } from '@playwright/test';
  * Feature-flag control through flagd-ui's read/write API behind the proxy: the same mechanism the
  * demo's own Cypress suite uses (src/frontend/cypress/e2e/CheckoutPaymentFailure.cy.ts).
  *
- * Flags are global to the stack, so only the serial "faults" project uses this. Every flag a test
+ * Flags are global to the stack, so only the serial specs (*.serial.spec.ts) use this. Every flag a test
  * changes is put back by restore(), which the `flags` fixture calls when the test ends.
  */
 export class FlagdApi {

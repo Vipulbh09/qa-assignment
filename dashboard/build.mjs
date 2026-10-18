@@ -66,7 +66,7 @@ if (existsSync(resultsPath)) {
           project: t.projectName,
           expected: t.expectedStatus,
           status: t.status, // expected | unexpected | flaky | skipped
-          defect: t.annotations?.find(a => a.type === 'fail')?.description,
+          defect: t.annotations?.find(a => a.type === 'defect')?.description, // set by knownDefect('DEF-xx') in the tests
         });
     for (const child of suite.suites ?? []) walk(child, file ?? suite.file);
   };
@@ -80,11 +80,11 @@ if (existsSync(resultsPath)) {
     return {
       name: p,
       total: mine.length,
-      passed: mine.filter(t => t.status === 'expected' && t.expected === 'passed').length,
-      knownDefect: mine.filter(t => t.expected === 'failed').length,
+      passed: mine.filter(t => t.status === 'expected' && !t.defect).length,
+      knownDefect: mine.filter(t => t.defect && t.status === 'unexpected').length,
       skipped: mine.filter(t => t.status === 'skipped').length,
       flaky: mine.filter(t => t.status === 'flaky').length,
-      failed: mine.filter(t => t.status === 'unexpected').length,
+      failed: mine.filter(t => t.status === 'unexpected' && !t.defect).length,
     };
   });
   run = {
@@ -95,10 +95,12 @@ if (existsSync(resultsPath)) {
     passed,
     flaky: count(t => t.status === 'flaky'),
     failed: count(t => t.status === 'unexpected'),
+    failedKnown: count(t => t.status === 'unexpected' && t.defect),
+    failedNew: count(t => t.status === 'unexpected' && !t.defect),
     skipped: count(t => t.status === 'skipped'),
     passRate: executed ? passed / executed : 0,
     flakyRate: executed ? count(t => t.status === 'flaky') / executed : 0,
-    knownDefectTests: tests.filter(t => t.expected === 'failed'),
+    knownDefectTests: tests.filter(t => t.defect),
     projects,
   };
 }
@@ -203,7 +205,7 @@ const knownByDefect = id => run?.knownDefectTests.filter(t => t.defect === id) ?
 const defectRows = defects
   .map(d => {
     const tests = knownByDefect(d.id);
-    const fixed = tests.some(t => t.status === 'unexpected');
+    const fixed = tests.some(t => t.status === 'expected' || t.status === 'flaky');
     const state = !run
       ? '<span class="muted">no run data</span>'
       : fixed
@@ -375,7 +377,7 @@ footer { font-size: 12px; color: var(--muted); margin-top: 24px; }
   </div>
   <div class="kpis">
     ${tile('Bugs caught by automation', `${pct(caughtByAutomation, defects.length)}%`, `${caughtByAutomation} of ${defects.length} defects were first found by a failing automated test`)}
-    ${run ? tile('CI pass rate (latest run)', `${(run.passRate * 100).toFixed(run.passRate === 1 ? 0 : 1)}%`, `${run.passed} of ${run.executed} executed · known-defect tests count as passing while the bug exists`) : tile('CI pass rate', 'n/a', 'No results file')}
+    ${run ? tile('CI pass rate (latest run)', `${(run.passRate * 100).toFixed(run.passRate === 1 ? 0 : 1)}%`, `${run.passed} of ${run.executed} executed · ${run.failedKnown} fail on known defects, ${run.failedNew} are new failures`) : tile('CI pass rate', 'n/a', 'No results file')}
     ${run ? tile('Flaky rate', `${(run.flakyRate * 100).toFixed(run.flaky ? 1 : 0)}%`, `${run.flaky} test${run.flaky === 1 ? '' : 's'} passed only on retry`) : tile('Flaky rate', 'n/a', 'No results file')}
     ${tile('Open defects', defects.length, `${defects.filter(d => d.severity === 'S1').length} critical · tracked by ${run ? run.knownDefectTests.length : '—'} known-defect tests`)}
   </div>
@@ -400,7 +402,7 @@ footer { font-size: 12px; color: var(--muted); margin-top: 24px; }
 
 <section class="card">
   <h2>Defects and their regression tests</h2>
-  <p class="card-sub">Each defect has a report with steps to reproduce (click the ID) and a test asserting the correct behaviour, wrapped in <code>test.fail()</code>. “Open · 2 tests” means two tests still fail as expected. When a bug is fixed, its test starts passing and the status changes here. DEF-10 is intermittent, so it is a <code>fixme</code> instead.</p>
+  <p class="card-sub">Each defect has a report with steps to reproduce (click the ID) and a test asserting the correct behaviour, marked with <code>knownDefect()</code>. Those tests really fail (they are red in the reports) until the bug is fixed; CI accepts that failure but not a new one. “Open · 2 tests” means two tests still fail. When a bug is fixed, its test starts passing and the status changes here. DEF-10 is intermittent, so it is a <code>fixme</code> instead.</p>
   <div class="table-wrap"><table><thead><tr><th>ID</th><th>Severity</th><th>Defect</th><th>Detected by</th><th>Test case</th><th>Status</th></tr></thead><tbody>${defectRows}</tbody></table></div>
 </section>
 

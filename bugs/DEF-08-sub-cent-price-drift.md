@@ -7,7 +7,7 @@
 | **Status** | Open. Reproduced 2026-10-17 on demo commit `ac0443b` |
 | **Detected by** | **Automated suite** (the exact-nanos comparison failed first) |
 | **Test case** | TC-CHK-02 |
-| **Regression test** | `automation/tests/api/checkout.spec.ts`: "order cost is exact to the nano (no float round-trip)" (`test.fail('DEF-08')`) |
+| **Regression test** | `automation/tests/api/checkout.spec.ts`: "order cost is exact to the nano (no float round-trip)" (`knownDefect('DEF-08')`) |
 
 ## Summary
 The price on an order differs from the catalogue price by one nano (a billionth of a unit): $209.95 becomes `209.949999999`. It is invisible when rounded to cents, but it is exact-value corruption in money handling.

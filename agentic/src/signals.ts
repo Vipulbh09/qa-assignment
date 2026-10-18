@@ -38,6 +38,14 @@ const RULES: Rule[] = [
     },
   },
   {
+    id: 'known-defect-test-failing',
+    hint: 'This test is marked as covering a known defect (knownDefect). It asserts the correct behaviour, so it fails by design until the bug is fixed: that is the documented product bug, not a new failure.',
+    test: (_t, _i, c) => {
+      const a = c.annotations?.find(x => x.type === 'defect');
+      return a && c.status === 'unexpected' ? `knownDefect(${a.description ?? ''}) and the test is failing` : undefined;
+    },
+  },
+  {
     id: 'locator-failure',
     hint: 'A locator timed out or matched the wrong number of elements. If the diff touches page objects, data-cy hooks or frontend markup, suspect a stale selector (test gap), not a product bug.',
     test: t => first(t, /waiting for (?:getByTestId|locator)\([^\n]*|strict mode violation[^\n]*|locator\.[a-zA-Z]+: Timeout[^\n]*/),

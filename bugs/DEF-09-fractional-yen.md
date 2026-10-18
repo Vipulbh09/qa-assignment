@@ -7,7 +7,7 @@
 | **Status** | Open. Reproduced 2026-10-17 on demo commit `ac0443b` |
 | **Detected by** | Manual probing |
 | **Test case** | TC-CHK-03 |
-| **Regression test** | `automation/tests/api/checkout.spec.ts`: "JPY prices have no fractional yen" (`test.fail('DEF-09')`) |
+| **Regression test** | `automation/tests/api/checkout.spec.ts`: "JPY prices have no fractional yen" (`knownDefect('DEF-09')`) |
 
 ## Summary
 The Japanese yen has no minor unit (there are no sen in circulation), but prices are converted and displayed with two decimals: The Comet Book costs **¥ 110.69**.

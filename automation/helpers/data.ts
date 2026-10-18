@@ -34,7 +34,7 @@ export const ADDRESS = {
   zipCode: '94043',
 };
 
-/** Known defects, referenced by test.fail() so the suite stays green until they're fixed. See test-cases/README.md. */
+/** Known defects, referenced by knownDefect() in the tests. See test-cases/README.md. */
 export const DEFECTS = {
   'DEF-01': 'Order cost differs from displayed price for prices with 1-9 cents',
   'DEF-02': 'Declined payment shows no message to the shopper',

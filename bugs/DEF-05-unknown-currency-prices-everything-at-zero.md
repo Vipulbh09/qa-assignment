@@ -7,7 +7,7 @@
 | **Status** | Open. Reproduced 2026-10-17 on demo commit `ac0443b` |
 | **Detected by** | Manual probing |
 | **Test case** | TC-CHK-03 |
-| **Regression tests** | `automation/tests/api/checkout.spec.ts`: "unsupported currency code is rejected, not priced at zero" and "order in an unsupported currency is refused" (both `test.fail('DEF-05')`) |
+| **Regression tests** | `automation/tests/api/checkout.spec.ts`: "unsupported currency code is rejected, not priced at zero" and "order in an unsupported currency is refused" (both `knownDefect('DEF-05')`) |
 
 ## Summary
 If the currency is a code the currency service has no exchange rate for, **every price becomes 0** and an order for any product, however expensive, **goes through for nothing**. A normal shopper can reach this from the storefront's own currency dropdown (see DEF-11 for why the dropdown offers it).

@@ -1,4 +1,4 @@
-import { test, expect } from '../../fixtures';
+import { test, expect, knownDefect } from '../../fixtures';
 import { PRODUCTS } from '../../helpers/data';
 
 test.describe('TC-CART-01 cart operations (API)', () => {
@@ -19,7 +19,7 @@ test.describe('TC-CART-01 cart operations (API)', () => {
 
 test.describe('TC-CART-02 invalid quantities and products are rejected', () => {
   test('negative quantity on an empty cart', async ({ shop }) => {
-    test.fail(true, 'DEF-03');
+    knownDefect('DEF-03');
     const res = await shop.addToCart(PRODUCTS.imager.id, -3);
 
     expect(res.status()).toBeGreaterThanOrEqual(400);
@@ -27,7 +27,7 @@ test.describe('TC-CART-02 invalid quantities and products are rejected', () => {
   });
 
   test('zero quantity is not stored as a line', async ({ shop }) => {
-    test.fail(true, 'DEF-03');
+    knownDefect('DEF-03');
     await shop.addToCart(PRODUCTS.imager.id, 0);
 
     expect((await shop.cart()).items).toEqual([]);
@@ -43,7 +43,7 @@ test.describe('TC-CART-02 invalid quantities and products are rejected', () => {
   });
 
   test('unknown product ID is rejected and does not break the cart', async ({ shop }) => {
-    test.fail(true, 'DEF-07');
+    knownDefect('DEF-07');
     const res = await shop.addToCart('NOT-A-PRODUCT', 1);
 
     expect(res.status()).toBeGreaterThanOrEqual(400);
