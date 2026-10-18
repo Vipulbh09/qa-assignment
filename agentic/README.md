@@ -28,4 +28,4 @@ npm run triage -- --test "<test name>" --log <log file> --diff <patch file>
 
 The `agent` job runs after Playwright, never fails the build, and publishes its report at `/agent/` on the same GitHub Pages site as the QA dashboard. The model steps need the repo secret `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`; a subscription token, not an API key). Without it the checks and a signals-only triage still run and the report says the eval was not re-run. Details and what is not yet verified: [`AGENT-DESIGN.md`](AGENT-DESIGN.md#in-ci).
 
-Session transcript (`transcript/`): not yet added.
+Session transcript: [`transcript/session.jsonl`](transcript/session.jsonl), one JSON record per line (user and assistant messages with their tool calls and results, in order). Tool output is truncated at 4,000 characters, system reminders and the model's hidden reasoning are removed, and home paths and the author's email are redacted. Nothing else was edited.
