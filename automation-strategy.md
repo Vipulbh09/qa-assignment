@@ -7,8 +7,6 @@ Each section separates **what this repo does today** from **what I'd do with a t
 | Need | Choice | Why this over the alternatives |
 |---|---|---|
 | API + UI tests | **Playwright + TypeScript** | One runner, one report, one language for both layers: the `request` fixture covers the REST routes, the browser covers the storefront. TypeScript matches the frontend (Next.js), so devs can read and fix the tests. Built-in trace viewer makes CI failures debuggable without re-running. **Project dependencies** let fault-injection tests run alone after everything else, which global flags require. |
-| Why not Cypress? | Upstream already uses it | Cypress is weaker at pure API testing, multi-tab and multi-context flows (TC-CART-03 needs two isolated shoppers), and parallelism without a paid service. I kept upstream's `data-cy` selectors so both suites share the same hooks. |
-| Fault injection | **flagd** (already in the stack) | Real failures through the real code paths, with no mocks to maintain. The demo ships the flags. |
 | Contract tests (next step) | **Pact**, or **buf breaking** on `demo.proto` | 8 languages talk gRPC. A proto change in Go can break a client in C++. `buf breaking` is a cheap first gate; consumer-driven Pact is the fuller answer. |
 | Performance (next step) | **Locust** (already in the stack as `load-generator`) | Reuse what exists; don't add a second load tool. Run on request, not nightly: it generates a lot of load. |
 
