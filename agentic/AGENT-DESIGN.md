@@ -7,19 +7,24 @@ It exists to cut *mean time to triage* (target under 4 working hours, `test-stra
 ## Workflow
 
 ```mermaid
-flowchart LR
+flowchart TD
   A[CI failure<br/>test name, log, git diff] --> B[Evidence collector<br/>results.json, sibling failures,<br/>docker health, TC id]
   B --> C[Signal rules<br/>cheap hints, never verdicts]
-  C --> D[Prompt builder<br/>defects from bugs/README.md]
+  C --> R{Rules-only baseline<br/>wall of 504s?<br/>src/baseline.ts}
+  R -->|rule met: no LLM call<br/>0 s, no model usage| V[Rule verdict<br/>environment_issue, restart_env<br/>decidedBy: rule]
+  R -->|no rule applies| D[Prompt builder<br/>defects from bugs/README.md]
   D --> E[claude -p<br/>no tools, JSON schema]
   E --> F[Schema check<br/>retry once]
-  F --> G[Guardrails<br/>only ever more cautious]
+  V --> G[Guardrails<br/>only ever more cautious]
+  F --> G
   G --> H[Report<br/>markdown or JSON]
   H --> I{Human}
   I -->|confirms or corrects| J[Eval history]
 ```
 
-One structured model call, not a free-roaming agent. Everything that needs no judgement (parsing the Playwright report, spotting unhealthy containers, matching known defect signatures, and classifying a wall of 504s) is plain code. The model only weighs the evidence. That keeps it cheap (about 8 seconds and a fraction of a cent per failure), testable, and impossible for it to run a destructive command, because it has no tools.
+**Two paths, one gate.** Before any prompt is built, the **rules-only baseline** checks whether the failure is one a rule can classify on its own. Today there is exactly one rule: a wall of 504s (conditions in [Rules-only baseline](#rules-only-baseline-srcbaselinets)). If it is met, the result comes from the rule and **the LLM is never called**, so a 14-failure outage costs no model usage instead of up to six calls. If it is not met (a different error, a single 504, a retry-pass, a diff to a request-path service), the failure goes down the normal path to the model. Both paths end in the same guardrails and the same report, and `--no-rules` forces every failure down the model path.
+
+One structured model call at most, not a free-roaming agent. Everything that needs no judgement (parsing the Playwright report, spotting unhealthy containers, matching known defect signatures, and classifying a wall of 504s) is plain code. The model only weighs the evidence. That keeps it cheap (about 8 seconds and a fraction of a cent per failure), testable, and impossible for it to run a destructive command, because it has no tools.
 
 ## What the agent decides, and what stays with a human
 
