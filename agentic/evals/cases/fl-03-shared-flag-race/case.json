@@ -1,0 +1,25 @@
+{
+  "id": "fl-03-shared-flag-race",
+  "category": "flaky_test",
+  "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
+  "testName": "checkout.spec.ts > TC-CHK-01 happy path order (API) > order succeeds in USD",
+  "expected": {
+    "classification": "flaky_test"
+  },
+  "context": {
+    "project": "api",
+    "status": "flaky",
+    "retries": 1,
+    "attempts": [
+      {
+        "status": "failed",
+        "error": "Expected: 200 Received: 422"
+      },
+      {
+        "status": "passed"
+      }
+    ],
+    "totalFailed": 0,
+    "totalExecuted": 49
+  }
+}

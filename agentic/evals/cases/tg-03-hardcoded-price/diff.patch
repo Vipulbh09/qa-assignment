@@ -1,0 +1,6 @@
+diff --git a/src/postgresql/init.sql b/src/postgresql/init.sql
+--- a/src/postgresql/init.sql
++++ b/src/postgresql/init.sql
+@@ -31,7 +31,7 @@ INSERT INTO catalog.products VALUES
+-('0PUK6V6EV0', 'Solar System Color Imager', '...', 'SolarSystemColorImager.jpg', 175, 0, 'accessories,telescopes'),
++('0PUK6V6EV0', 'Solar System Color Imager', '...', 'SolarSystemColorImager.jpg', 179, 0, 'accessories,telescopes'),

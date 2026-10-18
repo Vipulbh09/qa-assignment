@@ -1,0 +1,24 @@
+{
+  "id": "env-03-service-unavailable",
+  "category": "environment_issue",
+  "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
+  "testName": "payment.spec.ts > TC-PAY-01 card validation matrix > Mastercard is accepted",
+  "expected": {
+    "classification": "environment_issue"
+  },
+  "context": {
+    "project": "api",
+    "status": "unexpected",
+    "retries": 1,
+    "siblingFailures": [
+      "TC-PAY-01 Visa is accepted",
+      "TC-CHK-01 happy path order",
+      "TC-CHK-02 order cost equals price"
+    ],
+    "totalFailed": 4,
+    "totalExecuted": 49,
+    "unhealthyContainers": [
+      "payment"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+diff --git a/src/frontend/components/Cart/CartItem.tsx b/src/frontend/components/Cart/CartItem.tsx
+--- a/src/frontend/components/Cart/CartItem.tsx
++++ b/src/frontend/components/Cart/CartItem.tsx
+@@ -41,7 +41,7 @@ const CartItem = ({ product, quantity, onChange }: IProps) => {
+-        <S.Quantity data-cy="cart-item-quantity" value={quantity} onChange={onChange} />
++        <S.Quantity data-cy="cart-item-qty" value={quantity} onChange={onChange} />

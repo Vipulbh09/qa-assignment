@@ -362,7 +362,7 @@ footer { font-size: 12px; color: var(--muted); margin-top: 24px; }
   sha ? `Commit <a href="${repoUrl}/commit/${env.GITHUB_SHA}">${sha}</a> · ` : ''
 }${runUrl ? `<a href="${runUrl}">CI run ${env.GITHUB_RUN_ID}</a> · ` : ''}${
   run ? `Tests ran ${esc(new Date(run.startTime).toUTCString())}` : 'No test results in this build'
-} · <a href="${repoUrl}">Repository</a></div>
+} · <a href="agent/">CI triage agent report</a> · <a href="${repoUrl}">Repository</a></div>
 
 <section class="card hero">
   <div>

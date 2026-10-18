@@ -1,0 +1,6 @@
+diff --git a/automation/tests/ui/home.spec.ts b/automation/tests/ui/home.spec.ts
+--- a/automation/tests/ui/home.spec.ts
++++ b/automation/tests/ui/home.spec.ts
+@@ -3,3 +3,3 @@
+-test('home shows products', async ({ pages }) => {
++test('home page lists products', async ({ pages }) => {

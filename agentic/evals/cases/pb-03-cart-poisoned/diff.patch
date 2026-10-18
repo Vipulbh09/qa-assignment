@@ -1,0 +1,9 @@
+diff --git a/src/cart/src/services/CartService.cs b/src/cart/src/services/CartService.cs
+--- a/src/cart/src/services/CartService.cs
++++ b/src/cart/src/services/CartService.cs
+@@ -24,6 +24,7 @@ public override async Task<Empty> AddItem(AddItemRequest request, ServerCallContext context)
+     {
++        // TODO: log the product id for debugging
+         await _cartStore.AddItemAsync(request.UserId, request.Item.ProductId, request.Item.Quantity);
+         return Empty;
+     }

@@ -1,0 +1,16 @@
+{
+  "id": "tg-01-renamed-hook",
+  "category": "test_gap",
+  "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
+  "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > quantity can be changed on the cart page",
+  "expected": {
+    "classification": "test_gap"
+  },
+  "context": {
+    "project": "ui",
+    "status": "unexpected",
+    "retries": 1,
+    "totalFailed": 2,
+    "totalExecuted": 49
+  }
+}

@@ -45,7 +45,10 @@ jobs:
       - name: Dump service logs on failure
         if: failure()
         working-directory: .demo
-        run: docker compose logs --no-color --tail=200 > ../automation/test-results/docker-logs.txt || true
+        run: |
+          docker compose logs --no-color --tail=200 > ../automation/test-results/docker-logs.txt || true
+          # one line per container ("<name> <status>"): the triage agent reads this to spot unhealthy services
+          docker ps --format '{{.Names}} {{.Status}}' > ../automation/test-results/docker-ps.txt || true
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -56,10 +59,85 @@ jobs:
             automation/test-results
           retention-days: 14
 
+  agent:
+    # CI triage agent (see agentic/AGENT-DESIGN.md). Shadow mode: it reports, it never fails the build or acts on a failure.
+    # The model runs through Claude Code with a subscription token (CLAUDE_CODE_OAUTH_TOKEN, from `claude setup-token`), not an API key.
+    # Without the secret (forks, or not set up yet) the checks and the signal-only triage still run, and the report says so.
+    needs: playwright
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+    defaults:
+      run:
+        working-directory: agentic
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2   # the triage agent reads the last commit's diff
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24   # runs the TypeScript directly (type stripping)
+          cache: npm
+          cache-dependency-path: agentic/package-lock.json
+
+      - run: npm ci
+      - name: Typecheck and unit tests (no model needed)
+        run: npm run check
+
+      - name: Download Playwright results
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-report
+          path: automation
+        continue-on-error: true
+
+      - name: Install Claude Code
+        if: env.CLAUDE_CODE_OAUTH_TOKEN != ''
+        run: npm install -g @anthropic-ai/claude-code@2.1.302   # the version the CLI flags were verified on
+
+      - name: Run the 14-case eval
+        # Not on PRs: it costs 14 model calls against the subscription. Main, nightly and manual runs only.
+        id: eval
+        if: env.CLAUDE_CODE_OAUTH_TOKEN != '' && github.event_name != 'pull_request'
+        continue-on-error: true
+        run: npm run eval -- --out out
+
+      - name: Triage this run's failures
+        id: triage
+        continue-on-error: true
+        run: |
+          mkdir -p out
+          RESULTS=../automation/test-results/results.json
+          if [ ! -f "$RESULTS" ]; then echo "No results.json, nothing to triage"; exit 0; fi
+          # ':/' = the whole repo (the job runs inside agentic/, so '.' would hide changes under src/ and automation/)
+          git diff HEAD~1 HEAD -- ':/' ':(exclude)*package-lock.json' > out/change.patch || true
+          MODE=""
+          [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ] && MODE="--signals-only"
+          node src/ci-triage.ts --results "$RESULTS" --docker-ps ../automation/test-results/docker-ps.txt \
+            --diff out/change.patch --out out/triage-results.json $MODE
+
+      - name: Build the agent report
+        if: always()
+        run: |
+          if [ "${{ steps.eval.outcome }}" = "success" ]; then EVAL=out/latest.json; FRESH=true; else EVAL=evals/results/latest.json; FRESH=false; fi
+          TRIAGE=out/triage-results.json
+          node report/build.mjs --eval "$EVAL" --fresh "$FRESH" --triage "$TRIAGE" --out site --summary out/summary.md
+          cat out/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agent-report
+          path: agentic/site
+          retention-days: 14
+
   dashboard:
     # Publishes the metrics dashboard to GitHub Pages after every main/nightly/manual run,
     # including red ones: a failing run is exactly what the dashboard should show.
-    needs: playwright
+    needs: [playwright, agent]
     if: always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -88,6 +166,13 @@ jobs:
 
       - name: Build dashboard
         run: node automation/dashboard/build.mjs --results automation/test-results/results.json --history history.json --out site
+
+      - name: Add the CI triage agent report (served at /agent/)
+        uses: actions/download-artifact@v4
+        with:
+          name: agent-report
+          path: site/agent
+        continue-on-error: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

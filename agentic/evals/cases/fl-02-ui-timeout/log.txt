@@ -1,0 +1,10 @@
+Attempt 1 (failed):
+Error: expect(locator).toBeVisible() failed
+
+Locator: getByTestId('cart-empty-message')
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Attempt 2 (passed) in 2.1s.
+Same locator and test code. No other test failed in this run. All containers healthy.

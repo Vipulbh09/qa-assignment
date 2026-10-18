@@ -1,0 +1,10 @@
+diff --git a/src/currency/src/server.cpp b/src/currency/src/server.cpp
+--- a/src/currency/src/server.cpp
++++ b/src/currency/src/server.cpp
+@@ -178,7 +178,9 @@ static double getDouble(const oteldemo::Money& m)
+-  return m.units() + std::stod("0." + std::to_string(m.nanos()));
++  // read the nanos digit by digit to avoid a double conversion
++  double frac = 0; double scale = 0.1;
++  for (char c : std::to_string(m.nanos())) { frac += (c - '0') * scale; scale /= 10; }
++  return m.units() + frac;
+ }

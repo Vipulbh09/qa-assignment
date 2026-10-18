@@ -1,0 +1,30 @@
+{
+  "id": "env-02-stack-down",
+  "category": "environment_issue",
+  "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
+  "testName": "cart.spec.ts > TC-CART-01 cart operations (API) > adding the same product twice merges the line",
+  "expected": {
+    "classification": "environment_issue"
+  },
+  "context": {
+    "project": "api",
+    "status": "unexpected",
+    "retries": 1,
+    "siblingFailures": [
+      "api/ui test failing with ECONNREFUSED # 1",
+      "api/ui test failing with ECONNREFUSED # 2",
+      "api/ui test failing with ECONNREFUSED # 3",
+      "api/ui test failing with ECONNREFUSED # 4",
+      "api/ui test failing with ECONNREFUSED # 5",
+      "api/ui test failing with ECONNREFUSED # 6",
+      "api/ui test failing with ECONNREFUSED # 7",
+      "api/ui test failing with ECONNREFUSED # 8",
+      "api/ui test failing with ECONNREFUSED # 9",
+      "api/ui test failing with ECONNREFUSED # 10",
+      "api/ui test failing with ECONNREFUSED # 11",
+      "api/ui test failing with ECONNREFUSED # 12"
+    ],
+    "totalFailed": 13,
+    "totalExecuted": 49
+  }
+}

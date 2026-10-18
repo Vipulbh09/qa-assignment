@@ -1,0 +1,8 @@
+Error: Solar System Color Imager
+
+expect(received).toBeGreaterThan(expected)
+
+Expected: > 0n
+Received:   0n
+
+   at checkout.spec.ts:78:24
