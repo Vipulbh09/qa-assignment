@@ -58,7 +58,7 @@ git clone https://github.com/Vipulbh09/qa-assignment.git && cd qa-assignment
                                  # (on a laptop: LOADGEN=off ./scripts/start-demo.sh, see automation/README.md)
 cd automation && npm ci && npx playwright install chromium
 npm test
-../scripts/stop-demo.sh
+./scripts/stop-demo.sh
 ```
 
 The demo is pinned to upstream commit `ac0443b` (override with `DEMO_REF=<sha>`) so results are reproducible.
