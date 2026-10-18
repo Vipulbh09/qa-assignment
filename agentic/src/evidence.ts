@@ -11,7 +11,7 @@ interface PwTest {
   results: { status: string; error?: { message?: string } }[];
 }
 
-/** Flattens Playwright's JSON report (the same file automation/dashboard/build.mjs reads). */
+/** Flattens Playwright's JSON report (the same file dashboard/build.mjs reads). */
 export function flattenResults(report: any): PwTest[] {
   const out: PwTest[] = [];
   const walk = (suite: any, file?: string, path: string[] = []) => {

@@ -16,6 +16,8 @@ export default defineConfig({
     ['list'],
     ['html', { open: 'never' }],
     ['json', { outputFile: 'test-results/results.json' }],
+    // Allure results (raw), turned into a report by `npm run allure:generate`. Needs no Java (Allure 3).
+    ['allure-playwright', { resultsDir: 'allure-results', detail: true, suiteTitle: false }],
     ...(process.env.CI ? [['junit', { outputFile: 'test-results/junit.xml' }] as const] : []),
   ],
   // Pages and API calls on a busy laptop can take longer than the 5 s default; a real failure still fails.

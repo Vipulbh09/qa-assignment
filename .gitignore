@@ -9,4 +9,8 @@ automation/blob-report/
 .env.local
 
 # Generated dashboard
-automation/dashboard/dist/
+dashboard/dist/
+
+automation/allure-results/
+automation/allure-report/
+automation/allure-history/
