@@ -14,13 +14,13 @@ Each section separates **what this repo does today** from **what I'd do with a t
 
 ## 2. Structure for a team of 4
 
-**Today:** one repo, split by layer (`tests/api`, `tests/ui`, `tests/faults`), shared `helpers/`.
+**Today:** one repo using the **Page Object Model**: `pages/` (UI page objects, all selectors), `api/` (API clients, all endpoints), `fixtures/` (wiring), `helpers/` (data, money) and `tests/` split by layer (`api`, `ui`, `faults`). Tests contain only scenarios and assertions.
 
 **With a team**, I'd split by **pod**, not by layer, so ownership is obvious:
 
 ```
 automation/
-  helpers/            # owned by Quality Platform: shop client, money, flagd, fixtures
+  pages/ api/ fixtures/ helpers/   # owned by Quality Platform: page objects, API clients, wiring, data, money
   tests/
     checkout/  api/ ui/     # Checkout & Payments pod
     catalogue/ api/ ui/     # Catalogue & Pricing pod
@@ -29,16 +29,16 @@ automation/
   CODEOWNERS          # each folder requires review from its pod's QA
 ```
 
-- **Shared helpers are a product.** One owner (the Quality Platform QA) reviews every change; pods consume them. This is what stops 4 people writing 4 different "add to cart" helpers.
+- **Page objects and API clients are a product.** One owner (the Quality Platform QA) reviews every change; pods consume them. This is what stops 4 people writing 4 different "add to cart" helpers, and it means a UI change is fixed in one page object instead of in every test that touches that screen.
 - **Unit and contract tests live in the service repos**, owned by developers. This repo holds only cross-service tests: API flows, E2E, fault injection.
-- **Conventions are enforced, not documented:** lint rule against `waitForTimeout`, `forbidOnly` in CI (already on), required `DEF-xx` annotation on any `test.fail`.
+- **Conventions are enforced, not documented:** `npm run lint:pom` (already in CI) fails the build if a test contains a locator, a raw browser call, a raw HTTP call or an endpoint URL, and `forbidOnly` is on in CI. I would add a lint rule against `waitForTimeout` and a required `DEF-xx` annotation on any `test.fail`.
 - **Review rule:** a new test must name the test case or risk it covers. No test without a reason to exist.
 
 ## 3. Where tests run in CI
 
 | Trigger | Runs today | Target state | Blocks? |
 |---|---|---|---|
-| **Pull request** | `@smoke` (5 tests) against a fresh Compose stack | + contract checks for changed protos; + specs tagged with the changed pod | Yes |
+| **Pull request** | Type check + POM check, then `@smoke` (5 tests) against a fresh Compose stack | + contract checks for changed protos; + specs tagged with the changed pod | Yes |
 | **Push to main** | Full suite: api → ui → faults (49 tests, ~35s of test time) | Same, plus automatic revert-or-fix-forward within 1 hour | Yes |
 | **Nightly (03:00)** | Full suite | + Locust baseline (p95 `PlaceOrder`, catalogue); + every flagd scenario | No; raises a ticket |
 | **Manual** | Full suite (`workflow_dispatch`) | Same | No |
@@ -61,7 +61,9 @@ Flakiness is a **product of test design**, mostly. Prevention beats retries.
 | Rule | The problem it fixed |
 |---|---|
 | Wait on **state**, never on time | The first fault test saw 0 declines: the flag takes ~2s to propagate. `setFlag()` now polls flagd's own evaluation API until it reports the new variant. |
-| Readiness = the **slowest real path**, not "port open" | USD listings work before `product-catalog` is healthy; EUR requests 504'd for ~40s after "ready". `wait-for-demo.sh` now waits on a EUR listing. |
+| Readiness = the **slowest real path**, not "port open" | USD listings work before `product-catalog` is healthy; EUR requests 504'd for ~40s after "ready". `wait-for-demo.sh` now waits on a EUR listing, then for every container to be healthy: on a laptop `checkout` and `product-catalog` stayed `unhealthy` for minutes after that. |
+| **Don't compete with the stack for CPU** | On an 8-core Mac with the stack's `load-generator` on, full runs failed up to 19 of 49 tests with 504s and timeouts (the Docker VM was using ~385% CPU and `checkout` was unhealthy). With the load generator stopped, 5 of 6 full runs were clean, and the one failure was a 5 s assertion timeout, so assertions now wait 10 s. Locally the suite also uses 2 workers, `LOADGEN=off` is documented, and CI (a fresh runner each time) is unchanged. The lesson for triage: a wall of 504s is an environment signal, not 19 product bugs. |
+| **Page objects absorb UI change** | Selectors exist in one place (`pages/`), so a changed `data-cy` or label is a one-line fix and tests don't flake from copy-pasted, slightly different locators. `npm run lint:pom` keeps it that way. |
 | Global state runs **serially and is always restored** | flagd flags affect every test. The `faults` project runs after `api` and `ui`, one worker, and resets flags in `afterAll`. |
 | **Unique data per test** | The stack's own `load-generator` creates carts while tests run. Every test is a new shopper (`qa-<uuid>`), so parallel tests and background traffic never collide. |
 | **Assert ranges on probabilistic behaviour** | `paymentFailure` fails ~95% of payments, not all. The test asserts at least 14 of 20 declines (P(false fail) < 0.001), not an exact count. |
@@ -82,6 +84,6 @@ Flakiness is a **product of test design**, mostly. Prevention beats retries.
 | **Shoppers and carts** | Created per test, never shared, never cleaned up: Valkey has no persistence, so a fresh stack is a clean slate. |
 | **Cards** | Public test numbers (Visa, MasterCard, Amex, Luhn-invalid) and the form's own default. Never real card data. |
 | **Money** | Compared as integer nanos or rounded cents (`helpers/money.ts`), never as floats. Otherwise the tests would share the very bug (DEF-01, DEF-08) they exist to catch. |
-| **Feature flags** | Changed only through `helpers/flagd.ts`, verified before use, restored after. |
+| **Feature flags** | Changed only through `api/FlagdApi.ts`, verified before use, and restored automatically by the `flags` fixture when the test ends. |
 | **Production** | Synthetic orders tagged `synthetic_request=true`, so payment doesn't charge and the orders can be filtered out of reporting. |
 | **Data I'd add with a team** | A small API to seed edge-case products (prices ending .01–.09, zero-decimal currencies) without editing the shared seed, so pricing tests don't depend on one product happening to cost $57.08. |

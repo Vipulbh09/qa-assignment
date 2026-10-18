@@ -17,5 +17,10 @@ git -C "$DEMO_DIR" fetch -q --depth=1 origin "$DEMO_REF" 2>/dev/null \
 git -C "$DEMO_DIR" checkout -q "$DEMO_REF" 2>/dev/null || git -C "$DEMO_DIR" checkout -q FETCH_HEAD
 echo "Demo at $(git -C "$DEMO_DIR" rev-parse --short HEAD)"
 
-docker compose --project-directory "$DEMO_DIR" -f "$DEMO_DIR/compose.yaml" up -d
+# LOADGEN=off starts the stack without the simulated shoppers (the `load-generator` service).
+# Recommended on a laptop: it is the single biggest avoidable CPU load, and tests compete with it.
+SCALE=()
+[ "${LOADGEN:-on}" = "off" ] && SCALE=(--scale load-generator=0)
+
+docker compose --project-directory "$DEMO_DIR" -f "$DEMO_DIR/compose.yaml" up -d ${SCALE[@]+"${SCALE[@]}"}  # the ${..+..} form keeps an empty array safe under set -u on macOS bash 3.2
 "$ROOT/scripts/wait-for-demo.sh"

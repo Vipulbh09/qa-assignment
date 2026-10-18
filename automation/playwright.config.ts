@@ -5,6 +5,9 @@ const baseURL = process.env.BASE_URL ?? 'http://localhost:8080';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
+  // The demo stack is heavy (20 containers). On a laptop, 4 browser workers on top of it starve the
+  // stack's own services and cause 504s and timeouts, so run 2 locally. CI uses Playwright's default.
+  workers: process.env.CI ? undefined : 2,
   forbidOnly: !!process.env.CI,
   // One retry in CI so a flaky pass is visible in the report ("flaky"), not hidden.
   retries: process.env.CI ? 1 : 0,
@@ -15,6 +18,8 @@ export default defineConfig({
     ['json', { outputFile: 'test-results/results.json' }],
     ...(process.env.CI ? [['junit', { outputFile: 'test-results/junit.xml' }] as const] : []),
   ],
+  // Pages and API calls on a busy laptop can take longer than the 5 s default; a real failure still fails.
+  expect: { timeout: 10_000 },
   use: {
     baseURL,
     // The frontend tags elements with data-cy (used by its own Cypress suite); reuse them.

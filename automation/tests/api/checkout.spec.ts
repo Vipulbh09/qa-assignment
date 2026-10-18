@@ -1,14 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures';
 import { PRODUCTS, SHIPPING_PER_ITEM_USD, USD_PER_EUR } from '../../helpers/data';
 import { Money, toCents, toNanos } from '../../helpers/money';
-import { Shop } from '../../helpers/shop';
 
 type OrderItem = { item: { productId: string; quantity: number }; cost: Money };
 type Order = { orderId: string; shippingTrackingId: string; shippingCost: Money; items: OrderItem[] };
 
 test.describe('TC-CHK-01 happy path order (API)', () => {
-  test('USD order: totals, IDs and cart emptied @smoke', async ({ request }) => {
-    const shop = new Shop(request);
+  test('USD order: totals, IDs and cart emptied @smoke', async ({ shop }) => {
     await shop.addToCart(PRODUCTS.imager.id, 2);
 
     const res = await shop.placeOrder();
@@ -31,9 +29,8 @@ test.describe('TC-CHK-02 displayed price equals charged price', () => {
   const knownDefect: Record<string, string> = { [PRODUCTS.flashlight.id]: 'DEF-01' };
 
   for (const product of Object.values(PRODUCTS)) {
-    test(`${product.name}: order cost equals catalogue price`, async ({ request }) => {
+    test(`${product.name}: order cost equals catalogue price`, async ({ shop }) => {
       test.fail(!!knownDefect[product.id], knownDefect[product.id]);
-      const shop = new Shop(request);
 
       const listed = (await shop.products()).find(p => p.id === product.id)!;
       await shop.addToCart(product.id, 1);
@@ -46,9 +43,8 @@ test.describe('TC-CHK-02 displayed price equals charged price', () => {
     });
   }
 
-  test('order cost is exact to the nano (no float round-trip)', async ({ request }) => {
+  test('order cost is exact to the nano (no float round-trip)', async ({ shop }) => {
     test.fail(true, 'DEF-08');
-    const shop = new Shop(request);
     const listed = (await shop.products()).find(p => p.id === PRODUCTS.binoculars.id)!;
     await shop.addToCart(PRODUCTS.binoculars.id, 1);
     const order: Order = await (await shop.placeOrder()).json();
@@ -61,8 +57,7 @@ test.describe('TC-CHK-02 displayed price equals charged price', () => {
 test.describe('TC-CHK-03 non-USD currency', () => {
   const eur = (usd: number) => +(usd / USD_PER_EUR).toFixed(2);
 
-  test('EUR catalogue prices match the published rate', async ({ request }) => {
-    const shop = new Shop(request);
+  test('EUR catalogue prices match the published rate', async ({ shop }) => {
     const products = await shop.products('EUR');
     expect(products).toHaveLength(Object.keys(PRODUCTS).length);
 
@@ -74,14 +69,13 @@ test.describe('TC-CHK-03 non-USD currency', () => {
     }
   });
 
-  test('EUR price for a 1-9 cent product (Red Flashlight)', async ({ request }) => {
+  test('EUR price for a 1-9 cent product (Red Flashlight)', async ({ shop }) => {
     test.fail(true, 'DEF-01');
-    const listed = (await new Shop(request).products('EUR')).find(p => p.id === PRODUCTS.flashlight.id)!;
+    const listed = (await shop.products('EUR')).find(p => p.id === PRODUCTS.flashlight.id)!;
     expect(toCents(listed.priceUsd)).toBe(eur(PRODUCTS.flashlight.usd));
   });
 
-  test('EUR order is costed in EUR at listed prices', async ({ request }) => {
-    const shop = new Shop(request);
+  test('EUR order is costed in EUR at listed prices', async ({ shop }) => {
     await shop.addToCart(PRODUCTS.cometBook.id, 1);
     const res = await shop.placeOrder({ currency: 'EUR' });
     expect(res.status()).toBe(200);
@@ -92,37 +86,33 @@ test.describe('TC-CHK-03 non-USD currency', () => {
     expect(order.shippingCost.currencyCode).toBe('EUR');
   });
 
-  test('JPY prices have no fractional yen', async ({ request }) => {
+  test('JPY prices have no fractional yen', async ({ shop }) => {
     test.fail(true, 'DEF-09');
-    const products = await new Shop(request).products('JPY');
+    const products = await shop.products('JPY');
     for (const p of products) expect(p.priceUsd.nanos ?? 0, p.name).toBe(0);
   });
 
-  test('unsupported currency code is rejected, not priced at zero', async ({ request }) => {
+  test('unsupported currency code is rejected, not priced at zero', async ({ shop }) => {
     test.fail(true, 'DEF-05');
-    const shop = new Shop(request);
     const products = await shop.products('XXX').catch(() => null);
     // Either the catalogue refuses the currency, or it must not offer free goods.
     if (products) for (const p of products) expect(toNanos(p.priceUsd), p.name).toBeGreaterThan(0n);
   });
 
-  test('an unknown currency code is not added to the supported list', async ({ request }) => {
+  test('an unknown currency code is not added to the supported list', async ({ shop }) => {
     test.fail(true, 'DEF-11');
     // Mutates shared state: the code stays listed until the currency service restarts
     // (`docker restart currency` locally). A random code keeps parallel runs from colliding.
     const code = 'Q' + Math.random().toString(36).slice(2, 4).toUpperCase();
-    const before: string[] = await (await request.get('/api/currency')).json();
-    expect(before).not.toContain(code);
+    expect(await shop.currencies()).not.toContain(code);
 
-    await request.get(`/api/products?currencyCode=${code}`);
+    await shop.products(code);
 
-    const after: string[] = await (await request.get('/api/currency')).json();
-    expect(after).not.toContain(code);
+    expect(await shop.currencies()).not.toContain(code);
   });
 
-  test('order in an unsupported currency is refused', async ({ request }) => {
+  test('order in an unsupported currency is refused', async ({ shop }) => {
     test.fail(true, 'DEF-05');
-    const shop = new Shop(request);
     await shop.addToCart(PRODUCTS.tubeAssembly.id, 1);
     const res = await shop.placeOrder({ currency: 'XXX' });
     expect(res.status()).toBeGreaterThanOrEqual(400);

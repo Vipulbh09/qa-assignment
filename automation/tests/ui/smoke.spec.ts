@@ -1,9 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures';
 
 test.describe('UI smoke @smoke', () => {
-  test('home page renders the product list', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByTestId('home-page')).toBeVisible();
-    await expect(page.getByTestId('product-list').getByTestId('product-card').first()).toBeVisible();
+  test('home page renders the product list', async ({ pages }) => {
+    await pages.home.open();
+
+    await expect(pages.home.root).toBeVisible();
+    await expect(pages.home.productCards.first()).toBeVisible();
   });
 });

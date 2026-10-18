@@ -1,6 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures';
 import { CARDS, PRODUCTS } from '../../helpers/data';
-import { Shop, validCard, CreditCard } from '../../helpers/shop';
+import { validCard } from '../../api';
+import type { CreditCard } from '../../api';
 
 // TC-PAY-01: card validation matrix. Each row is its own test so a report shows exactly which rule broke.
 
@@ -32,9 +33,8 @@ const rows: Row[] = [
 
 test.describe('TC-PAY-01 card validation matrix', () => {
   for (const row of rows) {
-    test(row.name, async ({ request }) => {
+    test(row.name, async ({ shop }) => {
       test.fail(!!row.defect, row.defect);
-      const shop = new Shop(request);
       await shop.addToCart(PRODUCTS.cometBook.id, 1);
 
       const res = await shop.placeOrder({ card: validCard(row.card) });

@@ -1,6 +1,6 @@
 # Automation
 
-Playwright + TypeScript. Two projects:
+Playwright + TypeScript, built on the **Page Object Model**. Three projects:
 
 | Project | Folder | What it covers | Runs |
 |---|---|---|---|
@@ -8,15 +8,56 @@ Playwright + TypeScript. Two projects:
 | `ui`  | `tests/ui`  | Browser flows through the storefront | In parallel |
 | `faults` | `tests/faults` | flagd fault injection (payment failures) | Serially, **after** `api` and `ui`, because flags are global to the stack |
 
+## Structure: tests describe, page objects do
+
+```
+automation/
+  pages/                  UI page objects: every selector lives here
+    BasePage.ts             shared behaviour (header, session id, reload, current path)
+    HomePage.ts  ProductPage.ts  CartPage.ts  OrderConfirmationPage.ts
+    components/             parts shared across pages: Header.ts, CheckoutForm.ts
+    Pages.ts                bundles the page objects for one browser page
+  api/                    API clients: every endpoint URL lives here
+    ShopApi.ts              one instance = one shopper (products, cart, checkout, currencies)
+    FlagdApi.ts             feature flags; remembers what it changed and restores it
+  fixtures/index.ts       hands page objects and API clients to tests (Playwright fixtures)
+  helpers/                test data (data.ts) and exact money maths (money.ts)
+  tests/                  scenarios and assertions only: api/, ui/, faults/
+  scripts/check-pom.mjs   fails the build if a test breaks the rules below
+  dashboard/              builds the metrics dashboard
+```
+
+A UI test reads like the scenario it checks, and contains no selector:
+
+```ts
+test('merge, update, persist across reload and tabs, empty', async ({ pages, newTab }) => {
+  await pages.product.open(PRODUCTS.lensKit.id);
+  const cart = await pages.product.addToCart(2);      // returns the CartPage it lands on
+  await expect(cart.lineQuantity).toHaveValue('2');   // locators come from the page object
+  await cart.emptyCart();
+  await expect(cart.emptyMessage).toBeVisible();
+});
+```
+
+**The rules** (enforced by `npm run lint:pom`, which CI runs before the tests):
+
+1. **No locators in tests.** No `getBy...`, `locator(...)`, selector strings or `data-cy`. If a test needs something new, add a getter or method to a page object.
+2. **No raw browser calls in tests.** No `page.`, `click`, `fill`, `goto`. Page objects expose actions (`addToCart`, `placeOrder`, `chooseExpiry`), and tests only assert.
+3. **No raw HTTP or URLs in tests.** Endpoints live in `ShopApi` and `FlagdApi`.
+4. **Tests import `test` and `expect` from `fixtures/`, never from `@playwright/test`.** The fixtures are `pages` (this test's browser), `newTab` (another tab, same shopper), `newSession` (a separate browser, a different shopper), `shop` (a fresh API shopper), `newShopper` (more shoppers) and `flags` (flag control, restored when the test ends).
+5. **Page objects return locators; tests make the assertions.** A page method that moves to another page returns that page's object (`addToCart()` returns a `CartPage`).
+
 ## Prerequisites
 
 - Docker (Compose v2), with roughly 6 GB of memory available to it
 - Node.js 20 or later
+- **A machine that is not busy.** The demo is 20 containers. If it starves for CPU, `checkout` and `product-catalog` turn unhealthy and tests fail with 504s or timeouts that look like product bugs (see "Running on a laptop" below).
 
 ## Run
 
 ```bash
-# from the repo root: clone the pinned demo and start it (first run pulls images)
+# from the repo root: clone the pinned demo and start it (first run pulls images).
+# On a laptop add LOADGEN=off, see "Running on a laptop" below.
 ./scripts/start-demo.sh
 
 cd automation
@@ -26,6 +67,7 @@ npx playwright install chromium
 npm test              # everything
 npm run test:smoke    # @smoke subset
 npm run test:api      # API project only
+npm run check         # type check + POM check (no stack needed)
 npm run report        # open the last HTML report
 
 # when finished
@@ -34,13 +76,22 @@ npm run report        # open the last HTML report
 
 Set `BASE_URL` to target a different host (default `http://localhost:8080`).
 
+## Running on a laptop
+
+The demo stack is heavy: right after start-up the Docker VM can use several cores for a few minutes. Findings from building this suite on an 8-core Mac:
+
+- `./scripts/start-demo.sh` now waits for **every container to be healthy**, not just for the shop to answer. A working EUR listing came minutes before `checkout` and `product-catalog` stopped reporting `unhealthy`.
+- **`LOADGEN=off ./scripts/start-demo.sh`** starts the stack without the `load-generator` (simulated shoppers). It is the biggest avoidable CPU load; with it off, three consecutive full runs passed. CI keeps it on.
+- Locally the suite uses **2 browser workers** (CI uses Playwright's default), and assertions wait up to 10 s instead of 5 s.
+- If a run shows many `504`s, first check `docker ps`: a container marked `(unhealthy)` makes the result meaningless. Restart the stack (`../scripts/stop-demo.sh`, then start) and rerun.
+
 ## Conventions
 
-- Selectors use the `data-cy` attributes the frontend already ships (`testIdAttribute` in `playwright.config.ts`).
-- Each test creates its own `userId`, so tests never share a cart and can run in parallel.
+- Selectors use the `data-cy` attributes the frontend already ships (`testIdAttribute` in `playwright.config.ts`), and live only in `pages/`.
+- Each test creates its own `userId` (the `shop` fixture), so tests never share a cart and can run in parallel.
 - Tag fast, critical checks with `@smoke`. PRs run only those (see `.github/workflows/e2e.yml`).
 - Money is compared as integer nanos or rounded cents (`helpers/money.ts`), never floats, so the tests can't share the bug they look for.
-- Flags are changed only through `helpers/flagd.ts`, which waits until flagd itself reports the new variant (it takes ~2s to propagate) and is always reset in `afterAll`.
+- Flags are changed only through `api/FlagdApi.ts`, which waits until flagd itself reports the new variant (it takes ~2s to propagate). The `flags` fixture restores every flag a test changed when the test ends, even if it fails.
 - Don't run the `faults` project with `--repeat-each` or more than one worker: repeats are spread across workers and would flip the same global flags concurrently.
 
 ## Known defects: how they show up in results

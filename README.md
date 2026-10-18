@@ -8,7 +8,7 @@ I treated this as a risk exercise, not a coverage exercise: find where money and
 
 1. **Explore before writing.** I read the code paths behind checkout, payment, currency and cart, and probed them live. That found **11 confirmed defects**, each with a report and steps to reproduce in [`bugs/`](bugs/), including two S1s: prices with 1–9 cents are charged wrongly ($57.08 shown, $57.80 costed), and an unsupported currency code makes **everything free** (a $3,599 item ordered and shipped for 0). Full list: [`test-cases/README.md`](test-cases/README.md).
 2. **Go deep on three flows:** checkout, payment and cart. 11 test cases, each with preconditions, expected results, edge cases and the risk to flag before shipping.
-3. **Automate what pays back:** 49 Playwright tests (API, UI and flagd fault injection). 7 of 11 cases fully automated, 3 partially, 1 deliberately manual, with the reason recorded. Known defects are asserted with `test.fail()`, so the suite is green today and turns red the moment a bug is fixed.
+3. **Automate what pays back:** 49 Playwright tests (API, UI and flagd fault injection) in a page-object structure: tests hold scenarios and assertions only, and a CI check fails the build if one contains a locator or a raw call. 7 of 11 cases fully automated, 3 partially, 1 deliberately manual, with the reason recorded. Known defects are asserted with `test.fail()`, so the suite is green today and turns red the moment a bug is fixed.
 4. **Make it reproducible:** the demo is pinned to one upstream commit, and CI runs the suite against a fresh stack on every push.
 
 ### Calls I made where the brief was ambiguous
@@ -44,7 +44,8 @@ I treated this as a risk exercise, not a coverage exercise: find where money and
 Requires Docker (Compose v2, around 6 GB of memory) and Node.js 20 or later.
 
 ```bash
-./scripts/start-demo.sh          # clones the demo at a pinned commit, starts it, waits until ready
+./scripts/start-demo.sh          # clones the demo at a pinned commit, starts it, waits until healthy
+                                 # (on a laptop: LOADGEN=off ./scripts/start-demo.sh, see automation/README.md)
 cd automation && npm ci && npx playwright install chromium
 npm test
 ../scripts/stop-demo.sh

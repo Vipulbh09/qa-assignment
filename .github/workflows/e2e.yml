@@ -30,6 +30,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run typecheck
+      - name: Check tests use page objects only
+        run: npm run lint:pom
 
       - name: Run tests
         # PRs run the fast smoke subset; main, nightly and manual runs run everything.

@@ -1,37 +1,31 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '../../fixtures';
 import { PRODUCTS } from '../../helpers/data';
 
-async function cartWithOneItem(page: Page) {
-  await page.goto(`/product/${PRODUCTS.cometBook.id}`);
-  await page.getByTestId('product-add-to-cart').click();
-  await page.waitForURL('**/cart');
-}
-
 test.describe('TC-PAY-02 declined payment feedback', () => {
-  test('shopper sees a message when the card is declined', async ({ page }) => {
+  test('shopper sees a message when the card is declined', async ({ pages }) => {
     test.fail(true, 'DEF-02');
     test.skip(new Date().getMonth() === 0, 'needs a past month in the current year');
-    await cartWithOneItem(page);
+    await pages.product.open(PRODUCTS.cometBook.id);
+    const cart = await pages.product.addToCart();
 
     // January of the current year: offered by the form, always expired after January.
-    await page.locator('#credit_card_expiration_month').selectOption('1');
-    await page.locator('#credit_card_expiration_year').selectOption(String(new Date().getFullYear()));
-    await page.getByTestId('checkout-place-order').click();
+    await cart.checkoutForm.chooseExpiry(1, new Date().getFullYear());
+    await cart.submitOrder();
 
-    await expect(page.getByText(/payment could not be processed/i)).toBeVisible({ timeout: 10_000 });
-    await expect(page).toHaveURL(/\/cart$/);
+    await expect(cart.declineMessage).toBeVisible({ timeout: 10_000 });
+    expect(cart.path()).toBe('/cart');
   });
 });
 
 test.describe('TC-PAY-03 expiry selector', () => {
-  test('past months of the current year cannot be selected', async ({ page }) => {
+  test('past months of the current year cannot be selected', async ({ pages }) => {
     test.fail(true, 'DEF-04');
-    const currentMonth = new Date().getMonth() + 1;
-    test.skip(currentMonth === 1, 'no past months in January');
-    await cartWithOneItem(page);
+    test.skip(new Date().getMonth() + 1 === 1, 'no past months in January');
+    await pages.product.open(PRODUCTS.cometBook.id);
+    const cart = await pages.product.addToCart();
 
-    await page.locator('#credit_card_expiration_year').selectOption(String(new Date().getFullYear()));
-    const january = page.locator('#credit_card_expiration_month option[value="1"]');
-    await expect(january).toBeDisabled();
+    await cart.checkoutForm.chooseExpiryYear(new Date().getFullYear());
+
+    await expect(cart.checkoutForm.expiryMonthOption(1)).toBeDisabled();
   });
 });
