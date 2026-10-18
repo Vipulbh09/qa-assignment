@@ -1,0 +1,5 @@
+Attempt 1 (failed):
+Error: expect(received).toBeGreaterThanOrEqual(expected)
+
+Expected: >= 400
+Received:    200

@@ -1,0 +1,6 @@
+diff --git a/src/ad/src/main/java/oteldemo/AdService.java b/src/ad/src/main/java/oteldemo/AdService.java
+--- a/src/ad/src/main/java/oteldemo/AdService.java
++++ b/src/ad/src/main/java/oteldemo/AdService.java
+@@ -88,6 +88,7 @@ public class AdService {
++      // TODO: cache ads per context key
+       List<Ad> allAds = new ArrayList<>();

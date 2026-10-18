@@ -1,0 +1,5 @@
+Attempt 1 (failed):
+Error: expect(received).not.toContain(expected) // indexOf
+
+Expected value: not "QEX"
+Received array:     ["QEX", "XXX", "ZAR", "ISK", "ILS", "RON", "GBP", "BRL", "CZK", "AUD", "BGN", "JPY", "PHP", "HUF", "USD", "SGD", "IDR", "CHF", "TRY", "NZD", "THB", "DKK", "PLN", "NOK", "HRK", "HKD", "EUR", "RUB", "CAD", "INR", "SEK", "KRW", "CNY", "MXN", "MYR"]

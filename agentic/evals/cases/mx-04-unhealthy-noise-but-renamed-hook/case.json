@@ -1,0 +1,9 @@
+{
+  "id": "mx-04-unhealthy-noise-but-renamed-hook",
+  "category": "tricky",
+  "cohort": "added-after-v2",
+  "provenance": "constructed: mixed signals. docker ps shows an unhealthy container (common on a busy runner) but the failure is one locator timeout that the diff explains by renaming a data-cy hook",
+  "testName": "ui/cart.spec.ts > TC-CART-01 cart lifecycle (UI) > Empty Cart clears the badge",
+  "expected": { "classification": "test_gap", "next_action": ["fix_test"], "owner_pod": ["Storefront", "Quality Platform"], "needs_human": false },
+  "context": { "file": "ui/cart.spec.ts", "project": "ui", "status": "unexpected", "retries": 1, "siblingFailures": [], "totalFailed": 1, "totalExecuted": 49, "unhealthyContainers": ["checkout"], "testCaseId": "TC-CART-01" }
+}

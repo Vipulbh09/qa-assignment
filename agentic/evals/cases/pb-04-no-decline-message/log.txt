@@ -1,0 +1,11 @@
+Attempt 1 (failed):
+Error: expect(locator).toBeVisible() failed
+
+Locator: getByText(/payment could not be processed/i)
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" getByText(/payment could not be processed/i) with timeout 10000ms
+  - waiting for getByText(/payment could not be processed/i)

@@ -1,0 +1,53 @@
+{
+  "id": "mx-01-stale-annotation-masks-outage",
+  "category": "tricky",
+  "cohort": "added-after-v2",
+  "provenance": "real: Playwright run against the live stack on 2026-10-18 (pinned demo ac0443b) with `docker pause product-catalog`. The test is annotated test.fail(DEF-05) and \"passes\" only because checkout is down, so the stale-annotation signal fires on an outage. Log, results and context come from that run; docker ps is the real output.",
+  "testName": "api/checkout.spec.ts > TC-CHK-03 non-USD currency > unsupported currency code is rejected, not priced at zero",
+  "expected": {
+    "classification": "environment_issue",
+    "next_action": [
+      "restart_env"
+    ],
+    "owner_pod": [
+      "Quality Platform"
+    ],
+    "needs_human": false
+  },
+  "context": {
+    "siblingFailures": [
+      "TC-CHK-01 happy path order (API) > USD order: totals, IDs and cart emptied @smoke",
+      "TC-CHK-02 displayed price equals charged price > National Park Foundation Explorascope: order cost equals catalogue price",
+      "TC-CHK-02 displayed price equals charged price > Starsense Explorer Refractor Telescope: order cost equals catalogue price",
+      "TC-CHK-02 displayed price equals charged price > Eclipsmart Travel Refractor Telescope: order cost equals catalogue price",
+      "TC-CHK-02 displayed price equals charged price > Lens Cleaning Kit: order cost equals catalogue price",
+      "TC-CHK-02 displayed price equals charged price > Roof Binoculars: order cost equals catalogue price",
+      "TC-CHK-02 displayed price equals charged price > Solar System Color Imager: order cost equals catalogue price",
+      "TC-CHK-02 displayed price equals charged price > Optical Tube Assembly: order cost equals catalogue price",
+      "TC-CHK-02 displayed price equals charged price > Solar Filter: order cost equals catalogue price",
+      "TC-CHK-02 displayed price equals charged price > The Comet Book: order cost equals catalogue price",
+      "TC-CHK-03 non-USD currency > EUR catalogue prices match the published rate",
+      "TC-CHK-03 non-USD currency > EUR order is costed in EUR at listed prices",
+      "TC-CHK-03 non-USD currency > order in an unsupported currency is refused"
+    ],
+    "unhealthyContainers": [],
+    "testCaseId": "TC-CHK-03",
+    "file": "api/checkout.spec.ts",
+    "project": "api",
+    "status": "unexpected",
+    "retries": 0,
+    "attempts": [
+      {
+        "status": "passed"
+      }
+    ],
+    "annotations": [
+      {
+        "type": "fail",
+        "description": "DEF-05"
+      }
+    ],
+    "totalFailed": 14,
+    "totalExecuted": 19
+  }
+}

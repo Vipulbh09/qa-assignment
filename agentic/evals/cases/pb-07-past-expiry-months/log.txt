@@ -1,0 +1,13 @@
+Attempt 1 (failed):
+Error: expect(locator).toBeDisabled() failed
+
+Locator:  locator('#credit_card_expiration_month').locator('option[value="1"]')
+Expected: disabled
+Received: enabled
+Timeout:  10000ms
+
+Call log:
+  - Expect "toBeDisabled" locator('#credit_card_expiration_month').locator('option[value="1"]') with timeout 10000ms
+  - waiting for locator('#credit_card_expiration_month').locator('option[value="1"]')
+    24 × locator resolved to <option value="1">January</option>
+       - unexpected value "enabled"

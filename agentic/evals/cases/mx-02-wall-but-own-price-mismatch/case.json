@@ -1,0 +1,9 @@
+{
+  "id": "mx-02-wall-but-own-price-mismatch",
+  "category": "tricky",
+  "cohort": "added-after-v2",
+  "provenance": "constructed: mixed signals. Several siblings fail with 504 and a container is unhealthy, but this test's own error is the DEF-01 price mismatch, not a timeout",
+  "testName": "api/checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
+  "expected": { "classification": "product_bug", "known_defect": "DEF-01", "next_action": ["file_bug"], "owner_pod": ["Catalogue & Pricing"], "needs_human": true },
+  "context": { "file": "api/checkout.spec.ts", "project": "api", "status": "unexpected", "retries": 1, "siblingFailures": ["TC-CHK-01 happy path order (API) > USD order: totals, IDs and cart emptied @smoke", "TC-CHK-02 displayed price equals charged price > Roof Binoculars: order cost equals catalogue price", "TC-CHK-02 displayed price equals charged price > Solar Filter: order cost equals catalogue price", "TC-CHK-03 non-USD currency > EUR order is costed in EUR at listed prices"], "totalFailed": 5, "totalExecuted": 49, "unhealthyContainers": ["checkout"], "testCaseId": "TC-CHK-02" }
+}

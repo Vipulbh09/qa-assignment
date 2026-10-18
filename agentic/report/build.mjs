@@ -1,5 +1,5 @@
 // Builds the CI triage agent report (one static HTML page, no dependencies):
-//   --eval   evals/results/latest.json   the 14-case eval (fresh from this CI run, or the last committed one)
+//   --eval   evals/results/latest.json   the full eval (fresh from this CI run, or the last committed one)
 //   --fresh  true|false                  was the eval re-run in this build?
 //   --triage triage-results.json         triage of this run's failing tests (optional)
 //   --out    dir                         writes <out>/index.html
@@ -85,7 +85,7 @@ function triageSection() {
 const barRows = ev.bar.map(b => `<tr><td>${esc(b.name)}</td><td>${badge(b.pass)}</td></tr>`).join('');
 const caseRows = ev.cases
   .map(
-    c => `<details class="case"><summary><span class="tname"><span class="mono">${esc(c.id)}</span> ${c.provenance === 'real' ? '' : '<span class="tag">constructed</span>'}</span>
+    c => `<details class="case"><summary><span class="tname"><span class="mono">${esc(c.id)}</span> ${c.provenance === 'real' ? '' : '<span class="tag">constructed</span>'}${c.cohort === 'heldOut' ? ' <span class="tag">not tuned on</span>' : ''}</span>
   <span class="sum">expected <b>${esc(label(c.expected.classification))}</b> · got <b>${esc(label(c.got.classification))}</b> ${conf(c.got.confidence)} ${badge(c.ok, 'Correct', 'Wrong')}</span></summary>
   <p class="small" style="margin:8px 14px 0">Action ${badge(c.actionOk, 'right', 'differs')} (want ${esc(c.expected.next_action.join(' or ').replace(/_/g, ' '))}) · owner ${badge(c.ownerOk, 'right', 'differs')} (want ${esc(c.expected.owner_pod.join(' or '))}) · escalation ${badge(c.escalationOk, 'right', 'differs')} (want ${c.expected.needs_human ? 'human' : 'no human'})${c.falseDefect ? ' · ' + badge(false, '', 'false defect match') : ''}</p>
   <div class="case-body"><p class="small muted">${esc(c.testName)}</p>${resultBody(c.got, c.guardrailNotes)}</div></details>`,
@@ -154,6 +154,7 @@ ${banner}
   <p class="card-sub">${ev.total} labelled cases, ${ev.runsPerCase} run each. Eval ran ${esc(fmtDate(ev.ranAt))} (${ev.source === 'ci' ? 'in CI' : 'locally'}).</p>
   <div class="kpis">
     ${tile('Accuracy', `${pct(ev.correct, ev.total)}%`, `${ev.correct} of ${ev.total} classified correctly`)}
+    ${ev.cohorts ? tile('Cases not tuned on', `${ev.cohorts.heldOut.correct}/${ev.cohorts.heldOut.total}`, `added after the prompt was frozen; ${ev.cohorts.heldOut.realCorrect}/${ev.cohorts.heldOut.real} of the real ones`) : ''}
     ${tile('Known defect matched', `${ev.knownDefect.matched}/${ev.knownDefect.total}`, 'cases where the right DEF-xx was named')}
     ${tile('Real bugs called flaky', String(ev.falseFlaky), 'the costly mistake: it hides bugs')}
     ${tile('Next action right', `${ev.nextAction.action}/${ev.total}`, `owner pod ${ev.nextAction.owner}/${ev.total}, both ${ev.nextAction.both}/${ev.total}`)}
@@ -191,7 +192,7 @@ ${triageSection()}
   <ul class="small">
     <li><b>${ev.total} cases is directional</b>, not statistically strong. Read the cases, not just the percentage.</li>
     <li><b>${constructedN} of ${ev.total} cases are constructed</b> in Playwright's real error format; only ${ev.total - constructedN} use error text captured from a real run. Real CI failures will be messier.</li>
-    <li><b>The prompt was tuned on these same cases</b> (v1 scored 12/14, the fixes were made after seeing the misses), so the score is not a held-out result.</li>
+    <li><b>${ev.cohorts ? `The headline mixes two kinds of case.` : `The prompt was tuned on these cases.`}</b> ${ev.cohorts ? `${ev.cohorts.tuned.correct}/${ev.cohorts.tuned.total} are cases the prompt was tuned on. ${ev.cohorts.heldOut.correct}/${ev.cohorts.heldOut.total} were added after the prompt was frozen, and that is the number to quote for unseen failures.` : ''} No flaky case is a real capture.</li>
     <li><b>Action, owner and escalation are scored against labels I wrote</b>, where more than one answer can be acceptable. They are reported but not part of the success bar, which was fixed before the first run. The escalation labels are the most debatable.</li>
     <li>Not measured yet: agreement between the agent and a human reviewer in shadow mode.</li>
   </ul>

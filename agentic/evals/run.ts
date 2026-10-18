@@ -27,6 +27,7 @@ const cacheDir = join(resultsDir, 'cache');
 interface CaseMeta {
   id: string;
   category: string;
+  cohort?: string; // 'added-after-v2' = written after the v2 prompt was frozen, so not tuned on
   provenance: string;
   testName: string;
   expected: {
@@ -109,6 +110,13 @@ const falseDefect = head.filter(h => h.got.known_defect && h.got.known_defect !=
 const missedEscalation = head.filter(h => h.meta.expected.needs_human && !h.got.needs_human);
 const needlessEscalation = head.filter(h => !h.meta.expected.needs_human && h.got.needs_human);
 const escalationOk = head.length - missedEscalation.length - needlessEscalation.length;
+const cohortOf = (h: (typeof head)[number]) => (h.meta.cohort === 'added-after-v2' ? 'heldOut' : 'tuned');
+const cohorts = Object.fromEntries(
+  (['tuned', 'heldOut'] as const).map(k => {
+    const hs = head.filter(h => cohortOf(h) === k);
+    return [k, { total: hs.length, correct: hs.filter(h => h.ok).length, real: hs.filter(h => h.meta.provenance.startsWith('real')).length, realCorrect: hs.filter(h => h.ok && h.meta.provenance.startsWith('real')).length }];
+  }),
+);
 const unstable = rows.filter(r => new Set(r.runs.map(x => x.result.classification)).size > 1);
 const totalCost = rows.flatMap(r => r.runs).reduce((s, r) => s + (r.costUsd ?? 0), 0);
 const totalSec = rows.flatMap(r => r.runs).reduce((s, r) => s + r.durationMs, 0) / 1000;
@@ -130,6 +138,8 @@ const md = [
   `Next action ${actionOk.length}/${head.length} · owner pod ${ownerOk.length}/${head.length} · both ${bothOk.length}/${head.length} · false defect matches ${falseDefect.length} · escalation decision right ${escalationOk}/${head.length} (missed ${missedEscalation.length}, needless ${needlessEscalation.length}). These are reported, not part of the success bar.`,
   '',
   `**Accuracy: ${correct}/${head.length} (${pct(correct, head.length)})** · known-defect match ${defectOk.length}/${withDefect.length} · cost ${totalCost.toFixed(2)} USD-equivalent · ${totalSec.toFixed(0)}s model time`,
+  '',
+  `Cases written before the v2 prompt (tuned on): ${cohorts.tuned.correct}/${cohorts.tuned.total} · added after v2 was frozen (not tuned on): ${cohorts.heldOut.correct}/${cohorts.heldOut.total}, of which real captures ${cohorts.heldOut.realCorrect}/${cohorts.heldOut.real}`,
   '',
   '## Success bar',
   ...bar.map(b => `- ${b.pass ? 'PASS' : 'FAIL'}: ${b.name}`),
@@ -180,6 +190,7 @@ const report = {
   accuracy: head.length ? correct / head.length : 0,
   knownDefect: { matched: defectOk.length, total: withDefect.length },
   falseFlaky: falseFlaky.length,
+  cohorts,
   nextAction: { action: actionOk.length, owner: ownerOk.length, both: bothOk.length },
   falseDefect: falseDefect.map(h => h.meta.id),
   escalation: { right: escalationOk, missed: missedEscalation.map(h => h.meta.id), needless: needlessEscalation.map(h => h.meta.id) },
@@ -194,6 +205,7 @@ const report = {
     id: h.meta.id,
     category: h.meta.category,
     provenance: h.meta.provenance.split(':')[0],
+    cohort: cohortOf(h),
     testName: h.meta.testName,
     expected: h.meta.expected,
     ok: h.ok,

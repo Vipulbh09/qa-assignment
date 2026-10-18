@@ -98,8 +98,8 @@ jobs:
         if: env.CLAUDE_CODE_OAUTH_TOKEN != ''
         run: npm install -g @anthropic-ai/claude-code@2.1.302   # the version the CLI flags were verified on
 
-      - name: Run the 14-case eval
-        # Not on PRs: it costs 14 model calls against the subscription. Main, nightly and manual runs only.
+      - name: Run the eval
+        # Not on PRs: it costs about 29 model calls against the subscription. Main, nightly and manual runs only.
         id: eval
         if: env.CLAUDE_CODE_OAUTH_TOKEN != '' && github.event_name != 'pull_request'
         continue-on-error: true

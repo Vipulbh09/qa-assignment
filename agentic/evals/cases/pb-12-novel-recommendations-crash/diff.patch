@@ -1,0 +1,11 @@
+diff --git a/src/frontend/pages/api/recommendations.ts b/src/frontend/pages/api/recommendations.ts
+--- a/src/frontend/pages/api/recommendations.ts
++++ b/src/frontend/pages/api/recommendations.ts
+@@ -14,10 +14,8 @@ const handler = async ({ method, query }: NextApiRequest, res: NextApiResponse)
+     case 'GET': {
+       const { productIds = [], sessionId = '', currencyCode = '' } = query;
+-      const { productIds: ids } = await RecommendationsGateway.listRecommendations(sessionId as string, productIds as string[]);
+-      const productList = await Promise.all(ids.map(id => ProductCatalogService.getProduct(id, currencyCode as string)));
++      const result = await RecommendationsGateway.listRecommendations(sessionId as string, productIds as string[]);
++      const productList = await Promise.all(result.ids.map(id => ProductCatalogService.getProduct(id, currencyCode as string)));
+       return res.status(200).json(productList);
