@@ -2,6 +2,8 @@
 
 **📊 [QA metrics dashboard](https://vipulbh09.github.io/qa-assignment/)**: automation coverage, defects by detection source, CI pass and flaky rates. Rebuilt by CI from this repo on every push to `main`.
 
+**🧪 [Allure test report](https://vipulbh09.github.io/qa-assignment/allure/)**: every test with steps, retries and a run-to-run trend. Published by CI after each `main`, nightly or manual run.
+
 ## Approach
 
 I treated this as a risk exercise, not a coverage exercise: find where money and trust can break, prove it against the running system, then automate exactly that.
@@ -37,6 +39,7 @@ I treated this as a risk exercise, not a coverage exercise: find where money and
 | [`automation-strategy.md`](automation-strategy.md) | Tooling, team structure, CI, flakiness, test data |
 | [`agentic/`](agentic/) | Agentic QA workflow + `AGENT-DESIGN.md` + session transcript |
 | [`REFLECTION.md`](REFLECTION.md) | Escalations, ownership, week 1 vs. month 3 |
+| [`automation/allurerc.mjs`](automation/allurerc.mjs) | Config for the [Allure report](https://vipulbh09.github.io/qa-assignment/allure/) |
 | [`dashboard/`](dashboard/) | Builds the [metrics dashboard](https://vipulbh09.github.io/qa-assignment/) from test cases, defect log and Playwright results |
 
 ## Quick start
