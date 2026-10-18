@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { renderDefects, type KnownDefect } from './knowledge.ts';
 import type { EvidencePack } from './types.ts';
 
-export const PROMPT_VERSION = 'v2';
+export const PROMPT_VERSION = 'v2.1';
 
 const MAX_LOG = 6000;
 const MAX_DIFF = 6000;

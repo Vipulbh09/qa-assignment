@@ -1,8 +1,8 @@
 {
-  "id": "mx-01-stale-annotation-masks-outage",
+  "id": "mx-01-fixed-marker-masks-outage",
   "category": "tricky",
   "cohort": "added-after-v2",
-  "provenance": "real: Playwright run against the live stack on 2026-10-18 (pinned demo ac0443b) with `docker pause product-catalog`. The test is annotated test.fail(DEF-05) and \"passes\" only because checkout is down, so the stale-annotation signal fires on an outage. Log, results and context come from that run; docker ps is the real output.",
+  "provenance": "real: Playwright run against the live stack on 2026-10-18 (pinned demo ac0443b) with `docker pause product-catalog`. The test is marked knownDefect(DEF-05) and passes only because checkout is down (it asserts the order is refused, and every order is refused), so the known-defect-now-passing signal fires on an outage. Log, results and context come from that run; docker ps is the real output.",
   "testName": "api/checkout.spec.ts > TC-CHK-03 non-USD currency > unsupported currency code is rejected, not priced at zero",
   "expected": {
     "classification": "environment_issue",
@@ -34,7 +34,7 @@
     "testCaseId": "TC-CHK-03",
     "file": "api/checkout.spec.ts",
     "project": "api",
-    "status": "unexpected",
+    "status": "expected",
     "retries": 0,
     "attempts": [
       {
@@ -43,7 +43,7 @@
     ],
     "annotations": [
       {
-        "type": "fail",
+        "type": "defect",
         "description": "DEF-05"
       }
     ],

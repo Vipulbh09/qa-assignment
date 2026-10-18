@@ -31,20 +31,20 @@ diff --git a/src/currency/src/server.cpp b/src/currency/src/server.cpp
 
 **product_bug** · confidence **high** · known defect **DEF-01** · **needs a human**
 
-The order cost came back as 57.8 instead of the catalogue price 57.08, which is the DEF-01 symptom. The diff changes how getDouble in the currency service reads nanos, and that code is on the failing price flow. Checkout money values are wrong, so this needs a human (S1).
+TC-CHK-02 charged 57.8 instead of the displayed 57.08, which is the DEF-01 symptom. The diff rewrites getDouble in the currency service's nanos-to-fraction handling, which is on the pricing flow.
 
 ## Evidence
-- *log*: `Expected: 57.08 Received: 57.8`: The charged cost drops the leading zero of the cents (08 becomes 8). This is the DEF-01 signature, and the test assertion itself is correct.
-- *diff*: `for (char c : std::to_string(m.nanos())) { frac += (c - '0') * scale; scale /= 10; }`: to_string(nanos) has no leading zeros, so 80000000 and 8000000 give the same fraction. A value like .08 is read as .8 in this product code on the currency flow.
-- *known_defect*: `DEF-01 (S1): Order cost differs from the displayed price ($57.08 shown, $57.80 costed)`: This is the same price and the same symptom as the known defect.
+- *log*: `Expected: 57.08 Received: 57.8`: The charged cost drops the leading zero of the cents, matching the DEF-01 symptom of $57.08 shown and $57.80 costed.
+- *diff*: `diff --git a/src/currency/src/server.cpp b/src/currency/src/server.cpp`: Product source in the currency service changed on the money conversion path used by checkout.
+- *diff*: `for (char c : std::to_string(m.nanos())) { frac += (c - '0') * scale; scale /= 10; }`: to_string(nanos) does not zero-pad to 9 digits. For nanos=80000000 the string is '80000000', which is read as 0.8 instead of 0.08, so cents lose their leading zero.
 
 ## Runner-up: test_gap
-The expected value of 57.08 is the correct catalogue price and the test has no locator or stale-annotation problem. The diff changes product source, not test code. The log shows a wrong money value.
+The test's expected value of 57.08 is the correct catalogue price. No test code changed and the log shows no locator problem. This is not a stale knownDefect marker that now passes, because the test still fails on the wrong charged amount.
 
 ## Next action: file_bug (Catalogue & Pricing)
-Link this to DEF-01 as an S1 defect. The getDouble change in src/currency/src/server.cpp parses std::to_string(m.nanos()) digit by digit, which drops leading zeros of the 9-digit nanos field (for example 8000000 is read as .8). Revert the change, or zero-pad nanos to 9 digits, or compute units + nanos / 1e9. Add a regression test for prices with 1-9 cents.
+S1 money bug. Link it to DEF-01 and block or revert the currency/src/server.cpp getDouble change. Zero-pad nanos to 9 digits, or restore the original std::stod conversion with correct padding. Then re-run TC-CHK-02 and the other price tests.
 
 ## Guardrails applied
 - 1 evidence quote(s) are not in the input and were removed
 
-<sub>prompt v2 · 9.1s · shadow mode: no action was taken</sub>
+<sub>prompt v2.1 · 8.9s · shadow mode: no action was taken</sub>

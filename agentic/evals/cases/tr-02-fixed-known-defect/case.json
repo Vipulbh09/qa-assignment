@@ -1,7 +1,7 @@
 {
-  "id": "tr-02-stale-test-fail",
+  "id": "tr-02-fixed-known-defect",
   "category": "tricky",
-  "provenance": "real: error text captured from automation/test-results/results.json (pinned demo ac0443b, 2026-10-18) for the failing test; the fixing diff is constructed",
+  "provenance": "constructed: what CI sees when DEF-01 is fixed and its knownDefect marker is left on the test. The test passes (status expected, no error message), the context carries the real annotation shape, and the fixing diff is also constructed",
   "testName": "checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
   "expected": {
     "classification": "test_gap",
@@ -17,11 +17,16 @@
   },
   "context": {
     "project": "api",
-    "status": "unexpected",
+    "status": "expected",
     "retries": 0,
+    "attempts": [
+      {
+        "status": "passed"
+      }
+    ],
     "annotations": [
       {
-        "type": "fail",
+        "type": "defect",
         "description": "DEF-01"
       }
     ]
