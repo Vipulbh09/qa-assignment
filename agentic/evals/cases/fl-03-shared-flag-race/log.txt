@@ -1,0 +1,9 @@
+Attempt 1 (failed):
+Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 422
+body: {"code":"PAYMENT_FAILED"}
+
+Attempt 2 (passed): 200, order placed.
+Run context: this spec ran in the 'api' project, in parallel with another worker finishing a flagd test that had paymentFailure at 0.95. Flag was restored by its test 800ms later.

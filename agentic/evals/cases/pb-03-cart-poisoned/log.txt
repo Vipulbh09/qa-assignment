@@ -1,0 +1,9 @@
+Error: expect(received).toBeGreaterThanOrEqual(expected)
+
+Expected: >= 400
+Received:    200
+
+   at cart.spec.ts:48:38
+
+frontend | 5 NOT_FOUND: Product Not Found: NOT-A-PRODUCT
+frontend | GET /api/cart 500

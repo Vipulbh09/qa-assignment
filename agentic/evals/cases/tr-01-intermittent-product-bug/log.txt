@@ -1,0 +1,12 @@
+Attempt 1 (failed):
+Error: expect(locator).toHaveValue(expected) failed
+
+Locator: getByTestId('cart-item-quantity')
+Expected: "3"
+Received: "1"
+
+Diagnostic captured by the test on failure:
+  GET /api/cart (same shopper) -> items: [{ productId: "L9ECAV7KIM", quantity: 3 }]   <- server holds 3
+  page shows 1 until reload
+
+Attempt 2 (passed). Same code, no environment problems, all containers healthy.

@@ -1,0 +1,21 @@
+{
+  "id": "tr-02-stale-test-fail",
+  "category": "tricky",
+  "provenance": "real: error text captured from automation/test-results/results.json (pinned demo ac0443b, 2026-10-18) for the failing test; the fixing diff is constructed",
+  "testName": "checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
+  "expected": {
+    "classification": "test_gap",
+    "known_defect": "DEF-01"
+  },
+  "context": {
+    "project": "api",
+    "status": "unexpected",
+    "retries": 0,
+    "annotations": [
+      {
+        "type": "fail",
+        "description": "DEF-01"
+      }
+    ]
+  }
+}

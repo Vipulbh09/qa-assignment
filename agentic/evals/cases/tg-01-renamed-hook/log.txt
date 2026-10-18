@@ -1,0 +1,9 @@
+Error: expect(locator).toHaveValue(expected) failed
+
+Locator: getByTestId('cart-item-quantity')
+Expected: "2"
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - waiting for getByTestId('cart-item-quantity')

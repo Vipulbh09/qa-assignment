@@ -1,0 +1,6 @@
+Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 57.08
+Received: 57.8
+
+   at checkout.spec.ts:21:38

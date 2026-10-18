@@ -1,0 +1,16 @@
+{
+  "id": "tg-02-stale-rate",
+  "category": "test_gap",
+  "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
+  "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > EUR price for The Comet Book",
+  "expected": {
+    "classification": "test_gap"
+  },
+  "context": {
+    "project": "api",
+    "status": "unexpected",
+    "retries": 1,
+    "totalFailed": 1,
+    "totalExecuted": 49
+  }
+}

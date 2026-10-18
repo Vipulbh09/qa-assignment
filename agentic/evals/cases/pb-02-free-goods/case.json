@@ -1,0 +1,15 @@
+{
+  "id": "pb-02-free-goods",
+  "category": "product_bug",
+  "provenance": "real: error text captured from automation/test-results/results.json (pinned demo ac0443b, 2026-10-18)",
+  "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > unsupported currency code is rejected, not priced at zero",
+  "expected": {
+    "classification": "product_bug",
+    "known_defect": "DEF-05"
+  },
+  "context": {
+    "project": "api",
+    "status": "unexpected",
+    "retries": 0
+  }
+}

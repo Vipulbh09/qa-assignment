@@ -1,0 +1,6 @@
+Error: expect(locator).toHaveText(expected) failed
+
+Locator: getByTestId('cart-subtotal')
+Expected: "$350.00"
+Received: "$358.00"
+Timeout: 10000ms

@@ -1,0 +1,6 @@
+diff --git a/automation/helpers/data.ts b/automation/helpers/data.ts
+--- a/automation/helpers/data.ts
++++ b/automation/helpers/data.ts
+@@ -12,7 +12,7 @@
+-export const EUR_RATE = 1.1305; // USD per EUR, src/currency/src/server.cpp
++export const EUR_RATE = 1.13; // USD per EUR

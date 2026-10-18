@@ -1,0 +1,26 @@
+{
+  "id": "tr-01-intermittent-product-bug",
+  "category": "tricky",
+  "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
+  "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > cart page shows the merged quantity without a reload",
+  "expected": {
+    "classification": "product_bug",
+    "known_defect": "DEF-10"
+  },
+  "context": {
+    "project": "ui",
+    "status": "flaky",
+    "retries": 1,
+    "attempts": [
+      {
+        "status": "failed",
+        "error": "Expected: \"3\" Received: \"1\""
+      },
+      {
+        "status": "passed"
+      }
+    ],
+    "totalFailed": 0,
+    "totalExecuted": 49
+  }
+}

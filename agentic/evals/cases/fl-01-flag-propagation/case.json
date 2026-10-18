@@ -1,0 +1,23 @@
+{
+  "id": "fl-01-flag-propagation",
+  "category": "flaky_test",
+  "provenance": "constructed: Playwright error format, failure mode produced by hand (not captured from a live break)",
+  "testName": "payment-failure.spec.ts > TC-PAY-04 injected payment failure > most orders decline when paymentFailure is on",
+  "expected": {
+    "classification": "flaky_test"
+  },
+  "context": {
+    "project": "faults",
+    "status": "flaky",
+    "retries": 1,
+    "attempts": [
+      {
+        "status": "failed",
+        "error": "Expected: >= 14 Received: 0"
+      },
+      {
+        "status": "passed"
+      }
+    ]
+  }
+}

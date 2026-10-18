@@ -1,0 +1,15 @@
+{
+  "id": "pb-03-cart-poisoned",
+  "category": "product_bug",
+  "provenance": "real: error text captured from automation/test-results/results.json (pinned demo ac0443b, 2026-10-18)",
+  "testName": "cart.spec.ts > TC-CART-02 invalid quantities and products are rejected > unknown product ID is rejected and does not break the cart",
+  "expected": {
+    "classification": "product_bug",
+    "known_defect": "DEF-07"
+  },
+  "context": {
+    "project": "api",
+    "status": "unexpected",
+    "retries": 0
+  }
+}
