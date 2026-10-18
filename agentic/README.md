@@ -20,9 +20,9 @@ npm run triage -- --test "<test name>" --log <log file> --diff <patch file>
 | `evals/results/` | [`latest.md`](evals/results/latest.md) (v2) and [`v1.md`](evals/results/v1.md) |
 | `report/build.mjs` | Builds the [CI triage report](https://vipulbh09.github.io/qa-assignment/agent/) page published with the QA dashboard |
 | `src/ci-triage.ts` | Triages the failing tests of a CI run from Playwright's `results.json` |
-| `examples/` | Four sample inputs (two real, two constructed) with the agent output |
+| `examples/` | Four sample inputs (one real, three constructed) with the agent output |
 
-**Result:** v2 scored 14/14 on the 14 cases it was tuned on and **12/15 on 15 cases added afterwards** (10 of those from real captures). The misses are listed in the evaluation section. Read [the evaluation section](AGENT-DESIGN.md#evaluation) before quoting a number.
+**Result:** 28/29 with prompt v2.1: 14/14 on the 14 cases the prompt was tuned on and 14/15 on 15 cases added afterwards (it was 12/15 on the first run with the same rules, so read it as about 13 plus or minus a couple). 13 of the 29 cases are real captures. Read [the evaluation section](AGENT-DESIGN.md#evaluation) before quoting a number.
 
 ## In CI
 

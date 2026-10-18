@@ -42,9 +42,14 @@ const gitDiff = values.diff && existsSync(values.diff) ? readFileSync(values.dif
 
 const all = flattenResults(JSON.parse(readFileSync(resultsPath, 'utf8')));
 // Red builds first, then tests that only passed on retry. Tests marked knownDefect() fail by design (the bug is documented
-// in bugs/), so they are not triaged again: the CI gate (automation/scripts/gate.mjs) already accepts them.
+// in bugs/), so a failing one is not triaged again: the CI gate (automation/scripts/gate.mjs) already accepts it. A marked
+// test that PASSES is the opposite case: the gate turns the build red because the bug looks fixed, so the agent explains it.
 const isKnownDefect = (t: { annotations?: { type: string }[] }) => !!t.annotations?.some(a => a.type === 'defect');
-const failing = [...all.filter(t => t.status === 'unexpected' && !isKnownDefect(t)), ...all.filter(t => t.status === 'flaky')];
+const failing = [
+  ...all.filter(t => t.status === 'unexpected' && !isKnownDefect(t)),
+  ...all.filter(t => t.status === 'expected' && isKnownDefect(t)),
+  ...all.filter(t => t.status === 'flaky'),
+];
 const max = Number(values.max);
 const picked = failing.slice(0, max);
 

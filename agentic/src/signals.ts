@@ -30,11 +30,11 @@ const RULES: Rule[] = [
     test: (_t, _i, c) => (c.status === 'flaky' ? 'status: flaky (passed on retry)' : undefined),
   },
   {
-    id: 'stale-expected-failure',
-    hint: 'This test is annotated test.fail for a known defect but now PASSES: the defect is probably fixed and the annotation is stale. That is not a product bug.',
+    id: 'known-defect-now-passing',
+    hint: 'This test is marked knownDefect for a documented defect but now PASSES: the defect is probably fixed and the marker is stale (the CI gate fails on this). That is not a product bug.',
     test: (_t, _i, c) => {
-      const a = c.annotations?.find(x => x.type === 'fail');
-      return a && c.status === 'unexpected' ? `test.fail(${a.description ?? ''}) is unexpectedly passing` : undefined;
+      const a = c.annotations?.find(x => x.type === 'defect');
+      return a && c.status === 'expected' ? `knownDefect(${a.description ?? ''}) and the test is passing` : undefined;
     },
   },
   {

@@ -55,10 +55,11 @@ test('signals: a wall of 504s plus an unhealthy container reads as environment',
   assert.deepEqual(findUnhealthy('checkout Up 2 minutes (unhealthy)\ncart Up 2 minutes (healthy)'), ['checkout']);
 });
 
-test('signals: stale test.fail annotation and flaky-on-retry', () => {
+test('signals: knownDefect test now passing and flaky-on-retry', () => {
   const input = { testName: 't', log: 'x', gitDiff: '' };
-  const stale = detectSignals(input, { siblingFailures: [], unhealthyContainers: [], status: 'unexpected', annotations: [{ type: 'fail', description: 'DEF-01' }] });
-  assert.ok(stale.some(x => x.id === 'stale-expected-failure'));
+  const fixed = detectSignals(input, { siblingFailures: [], unhealthyContainers: [], status: 'expected', annotations: [{ type: 'defect', description: 'DEF-01' }] });
+  assert.ok(fixed.some(x => x.id === 'known-defect-now-passing'));
+  assert.ok(!fixed.some(x => x.id === 'known-defect-test-failing'));
   const flaky = detectSignals(input, { siblingFailures: [], unhealthyContainers: [], status: 'flaky' });
   assert.ok(flaky.some(x => x.id === 'flaky-passed-on-retry'));
 });
@@ -76,7 +77,7 @@ test('signals: diff limited to automation/ is flagged as test-only', () => {
 
 test('flattenResults finds status, annotations and attempts', () => {
   const report = {
-    suites: [{ file: 'a.spec.ts', title: 'a.spec.ts', suites: [{ title: 'TC-X', specs: [{ title: 't1', file: 'a.spec.ts', tests: [{ projectName: 'api', status: 'flaky', annotations: [{ type: 'fail', description: 'DEF-01' }], results: [{ status: 'failed' }, { status: 'passed' }] }] }] }] }],
+    suites: [{ file: 'a.spec.ts', title: 'a.spec.ts', suites: [{ title: 'TC-X', specs: [{ title: 't1', file: 'a.spec.ts', tests: [{ projectName: 'api', status: 'flaky', annotations: [{ type: 'defect', description: 'DEF-01' }], results: [{ status: 'failed' }, { status: 'passed' }] }] }] }] }],
   };
   const [t] = flattenResults(report);
   assert.equal(t.title, 'TC-X > t1');

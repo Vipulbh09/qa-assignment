@@ -2,7 +2,7 @@
   "id": "pb-07-past-expiry-months",
   "category": "product_bug",
   "cohort": "added-after-v2",
-  "provenance": "real: error text from a live run of automation/ on 2026-10-18 (pinned demo ac0443b). The DEF annotation was removed from the context so the failure surfaces as red, the way it would if the test.fail were deleted.",
+  "provenance": "real: error text from a live run of automation/ on 2026-10-18 (pinned demo ac0443b). The knownDefect marker was left out of the context, as for a test not yet marked: CI skips a marked test that fails, so only an unmarked one reaches the agent.",
   "testName": "ui/payment.spec.ts > TC-PAY-03 expiry selector > past months of the current year cannot be selected",
   "expected": {
     "classification": "product_bug",

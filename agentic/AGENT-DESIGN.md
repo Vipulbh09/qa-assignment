@@ -52,7 +52,7 @@ All of these come from this repo's own history, not generic advice:
 
 - A wall of 502/503/504 or timeouts, or an unhealthy container, is environment (`automation-strategy.md` §4).
 - **An intermittent failure is not automatically flaky.** If the server is right and the UI is wrong, it is a product bug (DEF-10).
-- A `test.fail('DEF-xx')` test that now passes means the defect was probably fixed: test gap, remove the annotation.
+- A `knownDefect('DEF-xx')` test fails by design while the bug exists, so the agent does not re-triage it (the CI gate accepts it). One that now passes means the defect was probably fixed: test gap, remove the marker.
 - Locator failure plus a diff to page objects or `data-cy` hooks: test gap.
 - Cross-test interference through shared stack state (flags) is a test-isolation flaw, so flaky, not environment.
 
@@ -103,22 +103,33 @@ To run unattended on an API key instead, add an API-key implementation of `LlmCl
 |---|---|---|
 | v1 | 12/14 | Misses: `fl-02` and `fl-03` (both expected flaky) |
 | v2 | 14/14 on the original 14 | Added the shared-state rule; fixed a flaw in case `fl-02` |
-| v2, unchanged, on the 15 added cases | **12/15** | The held-out number. Misses: `mx-01`, `mx-02`, `pb-09` (below). Full run: [`evals/results/v2-29.md`](evals/results/v2-29.md) |
+| v2, unchanged, on the 15 added cases | **12/15** | The held-out number. Misses: `mx-01`, `mx-02`, `pb-09`. Full run: [`evals/results/v2-29.md`](evals/results/v2-29.md) |
+| v2.1, all 29 | 28/29 (held-out part 14/15) | **No new rules.** Only the wording changed, because the tests now use `knownDefect()` instead of `test.fail()` (see below). The 12/15 to 14/15 move is run-to-run noise, not improvement: `mx-02` and `pb-09` flip between runs with the same prompt |
 
 **The 15 added cases** (`cohort: added-after-v2` in `case.json`, run with the prompt untouched):
 
 - **7 real product bugs never seen before** (DEF-02, 03, 04, 06, 08, 09, 11), using error text from a live run.
-- **3 real environment failures captured by breaking the stack on purpose:** `docker pause product-catalog` (504 wall, docker ps says "Paused", not "unhealthy") and `docker stop currency` (500s on every checkout; the stopped container is absent from docker ps). One of them (`mx-01`) is a `test.fail(DEF-05)` test that "passes" only because checkout is down.
+- **3 real environment failures captured by breaking the stack on purpose:** `docker pause product-catalog` (504 wall, docker ps says "Paused", not "unhealthy") and `docker stop currency` (500s on every checkout; the stopped container is absent from docker ps). One of them (`mx-01`) is a `knownDefect('DEF-05')` test that passes only because checkout is down (it asserts the order is refused, and every order is refused). Its marker looks stale, but the cause is the outage.
 - **2 defects that are not in the defect log** (`pb-11` total omits shipping, `pb-12` recommendations crash). The right answer is `known_defect: null`, so these test for forced DEF matches.
 - **3 mixed-signal cases** (`mx-02` a 504 wall plus a unique price mismatch; `mx-03` flaky retry inside the checkout money flow; `mx-04` an unhealthy container plus a renamed `data-cy`).
 
 How to read that honestly:
 
 - **29 cases is directional, not statistically strong.**
-- **The v2 gain on the original 14 is tuned, not held out. The 15 added cases are the held-out check (12/15).** `fl-03` was fixed by a prompt rule written after seeing it miss. `fl-02` was a mistake in my case: its log said "server state correct", the same diagnostic that marks the DEF-10 trap, so two cases were indistinguishable. I removed that line and recorded the change in the case file. A held-out set is the next thing to build.
-- **14 of 29 cases are real** (4 original, 10 added). The real ones use error text, results and `docker ps` from live runs against the pinned demo `ac0443b`. **There is still no real flaky case**: a flake cannot be produced on demand (I tried restarting `cart` mid-run; the suite finished first). The flaky, test-gap and some environment cases are *constructed* in Playwright's real error format, because producing them for real means breaking the stack on purpose. Their logs also contain some diagnostics (such as "flag restored 800ms later") that a real CI log would only have if the test were written to print them. Real nightly failures will be harder.
+- **The v2 gain on the original 14 is tuned, not held out. The 15 added cases are the held-out check (12/15 on the first run, 14/15 on the second with the same rules).** `fl-03` was fixed by a prompt rule written after seeing it miss. `fl-02` was a mistake in my case: its log said "server state correct", the same diagnostic that marks the DEF-10 trap, so two cases were indistinguishable. I removed that line and recorded the change in the case file. A held-out set is the next thing to build.
+- **13 of 29 cases are real** (3 original, 10 added). `tr-02` was real while the tests used `test.fail()`, but a fixed bug now shows up as a quiet pass, so its log is constructed. The real ones use error text, results and `docker ps` from live runs against the pinned demo `ac0443b`. **There is still no real flaky case**: a flake cannot be produced on demand (I tried restarting `cart` mid-run; the suite finished first). The flaky, test-gap and some environment cases are *constructed* in Playwright's real error format, because producing them for real means breaking the stack on purpose. Their logs also contain some diagnostics (such as "flag restored 800ms later") that a real CI log would only have if the test were written to print them. Real nightly failures will be harder.
 - **Beyond the class, four more things are scored**, against labels in each `case.json` that I wrote from the pod map and strategy doc (not copied from model output). Where policy allows several answers, the label lists them. (1) `next_action.type`; (2) `owner_pod`; (3) **false defect matches**: a DEF-xx named that is not the case's defect, or named when the case has none; (4) **escalation**: whether `needs_human` matches whether a person should look, split into *missed* (should have escalated, did not: the dangerous one) and *needless* (escalated when not needed: costs reviewer time). They are reported next to the success bar but are not part of it, because the bar was fixed before the first run. Current result: action 13/14, owner 13/14, false defect matches 0, escalation 8/14 with 0 missed and 6 needless. The needless escalations come mostly from the low-confidence and money-area guardrails, which are deliberately cautious. The `tr-01` miss is real: the agent routes a frontend cart bug to Checkout & Payments while the defect log lists the component as `frontend`.
-- Stability: the four delicate cases were run 3 times each with v2 and none changed class.
+- **Stability is weaker than I first said.** Three runs each of the four delicate original cases showed no change of class. But three runs of four of the added cases (v2.1) showed `pb-09` (product bug at high confidence once, test gap at low confidence twice) and `mx-02` (product bug twice, environment once) changing class, and `mx-01` is a stable miss. Treat any single run on a hard case as roughly a coin flip, and read the 29-case score as 28 plus or minus a couple.
+
+### Known-defect tests (`knownDefect()`)
+
+The automation no longer uses `test.fail()`. A test marked `knownDefect('DEF-xx')` asserts the correct behaviour and really fails while the bug exists (annotation type `defect`); `automation/scripts/gate.mjs` accepts those failures and turns the build red if one starts passing. What changed for the agent:
+
+- `ci-triage.ts` skips a **failing** known-defect test: the bug is documented and the gate already accepts it. Triaging it again would burn model calls and crowd out new failures.
+- It does triage a known-defect test that **passes** (Playwright status `expected` with a `defect` annotation): the gate has gone red and the agent says whether the bug looks fixed. Signal `known-defect-now-passing` replaces `stale-expected-failure`.
+- Prompt rule 3 and the test-gap definition now say `knownDefect` and "marker" instead of `test.fail` and "annotation" (prompt v2.1).
+- Eval cases `tr-02` and `mx-01` were renamed (`tr-02-fixed-known-defect`, `mx-01-fixed-marker-masks-outage`) and now carry a passing result with a `defect` annotation. The older snapshots `v1.*` and `v2-29.*` still use the old ids.
+- **Gap this leaves:** the gate accepts a known-defect test failing for *any* reason, so one that fails with a 504 during an outage is hidden from the agent. Only the unmarked tests failing alongside it are triaged. If you want those looked at, ci-triage could also pick known-defect failures whose error is not an assertion mismatch.
 
 Success bar, set before the first run: at least 85% correct, every `high`-confidence answer correct, no S1 product bug labelled flaky. v1 and v2 both met it.
 
