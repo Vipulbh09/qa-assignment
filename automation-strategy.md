@@ -49,8 +49,9 @@ automation/
 1. **GitHub check** on the PR or commit: red or green, the first thing anyone sees.
 2. **HTML report + traces** uploaded as an artifact (14 days). Every failure has a screenshot and a Playwright trace (`retain-on-failure`), so nobody needs to reproduce locally to start debugging.
 3. **Service logs** (last 200 lines per container) dumped into the artifact on failure, so you can tell environment from product without the stack still running.
-4. **JUnit XML** for trend tracking (pass rate, flaky rate, duration per test).
-5. **Target state:** nightly failures post to the owning pod's channel with the classified cause (see [`agentic/`](agentic/): an agent that triages CI failures into product bug / flaky / environment / test gap).
+4. **Allure report** (`allure-playwright` + Allure 3, no Java): every run on `main` publishes steps, attachments, retries and a trend history to GitHub Pages at `/allure/`, next to the metrics dashboard. The history file is fetched from the last published report and appended to, so the trend charts grow without a database.
+5. **JUnit XML** for trend tracking (pass rate, flaky rate, duration per test).
+6. **Target state:** nightly failures post to the owning pod's channel with the classified cause (see [`agentic/`](agentic/): an agent that triages CI failures into product bug / flaky / environment / test gap).
 
 ## 4. Flakiness
 

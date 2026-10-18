@@ -24,7 +24,6 @@ automation/
   helpers/                test data (data.ts) and exact money maths (money.ts)
   tests/                  scenarios and assertions only: api/, ui/, faults/
   scripts/check-pom.mjs   fails the build if a test breaks the rules below
-  dashboard/              builds the metrics dashboard
 ```
 
 A UI test reads like the scenario it checks, and contains no selector:
@@ -105,7 +104,7 @@ Defect IDs and descriptions live in `helpers/data.ts` and [`../test-cases/README
 
 ## Metrics dashboard
 
-`node dashboard/build.mjs` builds `dashboard/dist/index.html` from `../test-cases/` and `test-results/results.json` (written by every run). CI publishes it to [GitHub Pages](https://vipulbh09.github.io/qa-assignment/) after each `main`, nightly or manual run, including failing ones, and keeps the last 50 runs for the pass-rate trend.
+The metrics dashboard lives at the repo root, in [`../dashboard/`](../dashboard/). `node ../dashboard/build.mjs` builds `dashboard/dist/index.html` from `../test-cases/` and `test-results/results.json` (written by every run). CI publishes it to [GitHub Pages](https://vipulbh09.github.io/qa-assignment/) after each `main`, nightly or manual run, including failing ones, and keeps the last 50 runs for the pass-rate trend.
 
 ## Coverage
 

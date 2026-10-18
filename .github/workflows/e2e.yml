@@ -57,6 +57,7 @@ jobs:
           path: |
             automation/playwright-report
             automation/test-results
+            automation/allure-results
           retention-days: 14
 
   agent:
@@ -152,7 +153,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24   # Allure 3 and the dashboard builder
 
       - name: Download test results
         uses: actions/download-artifact@v4
@@ -165,7 +166,19 @@ jobs:
         run: curl -fsSL "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/history.json" -o history.json || echo '[]' > history.json
 
       - name: Build dashboard
-        run: node automation/dashboard/build.mjs --results automation/test-results/results.json --history history.json --out site
+        run: node dashboard/build.mjs --results automation/test-results/results.json --history history.json --out site
+
+      - name: Build the Allure report (served at /allure/)
+        # Allure 3 runs on Node only (no Java). The history file is fetched from the last published
+        # report and appended to, so the report's trend charts grow with every run.
+        if: hashFiles('automation/allure-results/*') != ''
+        working-directory: automation
+        run: |
+          npm ci
+          mkdir -p allure-history
+          curl -fsSL "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/allure/history.jsonl" -o allure-history/history.jsonl || rm -f allure-history/history.jsonl
+          npx allure generate allure-results --config allurerc.mjs --output ../site/allure --clean
+          cp allure-history/history.jsonl ../site/allure/history.jsonl
 
       - name: Add the CI triage agent report (served at /agent/)
         uses: actions/download-artifact@v4

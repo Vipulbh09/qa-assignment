@@ -1,10 +1,10 @@
 // Builds the QA metrics dashboard (a single static HTML page) from files in this repo:
-//   ../test-cases/*.md            -> automation coverage ("Automation status" field)
-//   ../test-cases/README.md       -> defects, severity, "Detected by"
-//   test-results/results.json     -> pass rate, flaky rate, known-defect tests (Playwright JSON reporter)
+//   test-cases/*.md            -> automation coverage ("Automation status" field)
+//   test-cases/README.md       -> defects, severity, "Detected by"
+//   automation/test-results/results.json     -> pass rate, flaky rate, known-defect tests (Playwright JSON reporter)
 //   history.json (optional)       -> previous CI runs, for the trend
 //
-// Usage: node dashboard/build.mjs [--results test-results/results.json] [--history in.json] [--out dist]
+// Usage: node dashboard/build.mjs [--results automation/test-results/results.json] [--history in.json] [--out dist]
 // No dependencies, so CI can run it without npm install.
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
@@ -12,12 +12,12 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repo = resolve(here, '../..');
+const repo = resolve(here, '..');
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
   return i > -1 ? process.argv[i + 1] : fallback;
 };
-const resultsPath = resolve(arg('results', join(here, '../test-results/results.json')));
+const resultsPath = resolve(arg('results', join(repo, 'automation/test-results/results.json')));
 const historyPath = arg('history', null);
 const outDir = resolve(arg('out', join(here, 'dist')));
 
@@ -362,7 +362,7 @@ footer { font-size: 12px; color: var(--muted); margin-top: 24px; }
   sha ? `Commit <a href="${repoUrl}/commit/${env.GITHUB_SHA}">${sha}</a> · ` : ''
 }${runUrl ? `<a href="${runUrl}">CI run ${env.GITHUB_RUN_ID}</a> · ` : ''}${
   run ? `Tests ran ${esc(new Date(run.startTime).toUTCString())}` : 'No test results in this build'
-} · <a href="agent/">CI triage agent report</a> · <a href="${repoUrl}">Repository</a></div>
+} · <a href="allure/">Allure test report</a> · <a href="agent/">CI triage agent report</a> · <a href="${repoUrl}">Repository</a></div>
 
 <section class="card hero">
   <div>
@@ -428,7 +428,7 @@ footer { font-size: 12px; color: var(--muted); margin-top: 24px; }
   </div>
 </section>
 
-<footer>Built by <code>automation/dashboard/build.mjs</code>. Every number on this page is computed from a file in the repository.</footer>
+<footer>Built by <code>dashboard/build.mjs</code>. Every number on this page is computed from a file in the repository.</footer>
 </main>
 <div id="tip" role="tooltip"></div>
 <script>
