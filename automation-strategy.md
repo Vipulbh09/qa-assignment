@@ -1,7 +1,5 @@
 # Automation Strategy
 
-Each section separates **what this repo does today** from **what I'd do with a team of 4 on a real product**. Everything under "today" runs in CI on every push ([`.github/workflows/e2e.yml`](.github/workflows/e2e.yml)).
-
 ## 1. Why these tools
 
 I used **Playwright with TypeScript** for both the API and the UI tests. One runner, one report and one language for both layers means a failure is read the same way whether it came from a REST call or a browser click, and nobody maintains two frameworks. The `request` fixture covers the frontend's REST routes and the browser covers the storefront. TypeScript matches the frontend (Next.js), so developers can read and fix the tests themselves. The trace viewer lets us debug a CI failure without re-running it, and project dependencies let the fault-injection tests run alone, after everything else, which they need because they change global flags.
