@@ -18,7 +18,6 @@ I treated this as a risk exercise, not a coverage exercise: find where money and
 | The brief says | What I found | What I did |
 |---|---|---|
 | Each service has an OpenAPI spec | None exist; services talk **gRPC** (`pb/demo.proto`), and the frontend exposes REST routes | Tested the real interfaces: REST via `/api/*`, gRPC contracts as the next step |
-| `docker compose up` runs the shop | Kafka, accounting and fraud-detection are only in `compose.full.yaml` | Kept to the default stack; the async order pipeline is an explicit gap, not a pass |
 | Images on Docker Hub | They're on `ghcr.io` | Pinned the demo commit so image versions can't drift |
 | Clone the repo with `--depth=1` | That takes whatever upstream `main` is that day, so results aren't reproducible | Pinned commit `ac0443b`; override with `DEMO_REF` |
 
