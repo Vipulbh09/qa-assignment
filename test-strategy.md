@@ -1,7 +1,5 @@
 # Test Strategy: OpenTelemetry Astronomy Shop
 
-**Scope:** upstream `opentelemetry-demo` at commit `ac0443b`, the default `compose.yaml` (20 services). Kafka, accounting and fraud-detection only exist in `compose.full.yaml`, so they are not covered here. That is a gap, not a pass.
-
 ## 1. How I went about it
 
 The goal of this strategy is a reliable quality outcome: the highest quality we can deliver, not the most tests we can write. With 20 services and a small team, covering everything equally means covering the important parts thinly. So I started by working out what could actually hurt a customer or the business, and only then decided what to test.
