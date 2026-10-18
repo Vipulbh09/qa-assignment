@@ -28,14 +28,6 @@ I treated it as a risk exercise, not a coverage exercise.
 4. **Automation strategy.** Playwright and TypeScript for API and UI, in a page-object structure. 49 tests, 7 of the 11 cases fully automated, 3 partly, 1 manual with the reason written down. It covers tooling, structure for a team of 4, CI, flakiness and test data ([`automation-strategy.md`](automation-strategy.md)).
 5. **Make it reproducible.** The demo is pinned to one upstream commit and CI runs the suite against a fresh stack on every push.
 
-### Calls I made where the brief was ambiguous
-
-| The brief says | What I found | What I did |
-|---|---|---|
-| Each service has an OpenAPI spec | None exist; services talk **gRPC** (`pb/demo.proto`), and the frontend exposes REST routes | Tested the real interfaces: REST via `/api/*`, gRPC contracts as the next step |
-| Images on Docker Hub | They're on `ghcr.io` | Pinned the demo commit so image versions can't drift |
-| Clone the repo with `--depth=1` | That takes whatever upstream `main` is that day, so results aren't reproducible | Pinned commit `ac0443b`; override with `DEMO_REF` |
-
 ### What to trust
 
 - **Verified by running:** every defect, every automated test (locally and in CI), and the numbers in the docs.
