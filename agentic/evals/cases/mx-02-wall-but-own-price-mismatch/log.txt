@@ -1,0 +1,11 @@
+Attempt 1 (failed):
+Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 57.08
+Received: 57.8
+
+Attempt 2 (failed):
+Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 57.08
+Received: 57.8

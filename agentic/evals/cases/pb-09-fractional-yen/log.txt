@@ -1,0 +1,7 @@
+Attempt 1 (failed):
+Error: Solar System Color Imager
+
+expect(received).toBe(expected) // Object.is equality
+
+Expected: 0
+Received: 563467492

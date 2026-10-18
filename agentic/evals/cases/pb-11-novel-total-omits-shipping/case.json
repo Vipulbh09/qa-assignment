@@ -1,0 +1,9 @@
+{
+  "id": "pb-11-novel-total-omits-shipping",
+  "category": "product_bug",
+  "cohort": "added-after-v2",
+  "provenance": "constructed: a defect that is NOT in the defect log (no DEF id applies); Playwright error format, written by hand",
+  "testName": "api/checkout.spec.ts > TC-CHK-01 happy path order (API) > USD order: totals, IDs and cart emptied @smoke",
+  "expected": { "classification": "product_bug", "next_action": ["file_bug"], "owner_pod": ["Catalogue & Pricing"], "needs_human": true },
+  "context": { "file": "api/checkout.spec.ts", "project": "api", "status": "unexpected", "retries": 1, "siblingFailures": ["TC-CHK-01 happy path order (UI) > place an order and see the confirmation"], "totalFailed": 2, "totalExecuted": 49, "unhealthyContainers": [], "testCaseId": "TC-CHK-01" }
+}

@@ -1,0 +1,15 @@
+Attempt 1 (failed):
+Error: expect(locator).toBeVisible() failed
+
+Locator: getByText(/your order is complete/i)
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 10000ms
+  - waiting for getByText(/your order is complete/i)
+    - locator resolved to <h1>Placing order...</h1>
+
+Attempt 2 (passed):
+(no error message)

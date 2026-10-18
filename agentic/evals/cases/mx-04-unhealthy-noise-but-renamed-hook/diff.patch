@@ -1,0 +1,7 @@
+diff --git a/src/frontend/components/Cart/EmptyCart.tsx b/src/frontend/components/Cart/EmptyCart.tsx
+--- a/src/frontend/components/Cart/EmptyCart.tsx
++++ b/src/frontend/components/Cart/EmptyCart.tsx
+@@ -12,7 +12,7 @@ const EmptyCart = () => {
+-    <S.EmptyCart data-cy="cart-empty-message">
++    <S.EmptyCart data-cy="empty-cart-message">
+       <S.Title>Your shopping cart is empty</S.Title>

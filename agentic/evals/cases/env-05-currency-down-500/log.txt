@@ -1,0 +1,11 @@
+Attempt 1 (failed):
+Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 504
+
+Attempt 2 (failed):
+Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 500

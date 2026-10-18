@@ -1,0 +1,9 @@
+{
+  "id": "pb-12-novel-recommendations-crash",
+  "category": "product_bug",
+  "cohort": "added-after-v2",
+  "provenance": "constructed: a defect that is NOT in the defect log, diff-driven; Playwright error format, written by hand",
+  "testName": "ui/checkout.spec.ts > TC-CHK-01 happy path order (UI) > product page shows recommendations",
+  "expected": { "classification": "product_bug", "next_action": ["file_bug"], "owner_pod": ["Storefront"], "needs_human": false },
+  "context": { "file": "ui/checkout.spec.ts", "project": "ui", "status": "unexpected", "retries": 1, "siblingFailures": [], "totalFailed": 1, "totalExecuted": 49, "unhealthyContainers": [], "testCaseId": "TC-CHK-01" }
+}

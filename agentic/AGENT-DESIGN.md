@@ -63,7 +63,7 @@ cd agentic && npm ci
 npm run check                       # typecheck + 12 unit tests, no model, no stack
 npm run triage -- --test "<name>" --log fail.log --diff change.patch \
     [--results ../automation/test-results/results.json] [--docker-ps ps.txt] [--model sonnet] [--json]
-npm run eval                        # 14 cases, about 2 minutes
+npm run eval                        # 29 cases, about 5 minutes (cached cases are free)
 ```
 
 `--docker-ps` takes the output of `docker ps --format '{{.Names}} {{.Status}}'`.
@@ -79,7 +79,7 @@ The `agent` job in [`.github/workflows/e2e.yml`](../.github/workflows/e2e.yml) r
 | Step | When | What it does |
 |---|---|---|
 | `npm run check` | Always | Typecheck and 12 unit tests. No model, no secret |
-| Eval (14 cases) | Push to `main`, nightly, manual, **and only if the secret exists** | Re-runs the eval through Claude Code. Not on PRs: it is 14 model calls |
+| Eval (29 cases) | Push to `main`, nightly, manual, **and only if the secret exists** | Re-runs the eval through Claude Code. Not on PRs: it is 29 model calls |
 | Triage this run's failures | Always (model only if the secret exists) | Reads `results.json`, triages up to 6 failed or flaky tests with the last commit's diff and container health. Without the secret it reports the rule-based signals only and says so |
 | Report | Always | Builds the page and appends a summary to the job's `GITHUB_STEP_SUMMARY` |
 
@@ -89,7 +89,7 @@ The `dashboard` job then publishes the report **inside the existing GitHub Pages
 
 **Not yet verified:** the model steps have only been run locally, on a login session. The first CI run with the secret is the real test of the token path. If it fails, the report falls back to the committed eval and the signals-only triage, and the job stays green.
 
-**Costs:** each main/nightly/manual run spends about 14 calls (about 2 minutes) on the eval, plus one call per triaged failure, against your subscription's limits. If that is too much, drop the eval step to nightly only by changing its `if`.
+**Costs:** each main/nightly/manual run spends about 29 calls (about 5 minutes) on the eval, plus one call per triaged failure, against your subscription's limits. If that is too much, drop the eval step to nightly only by changing its `if`.
 
 Failures are triaged from the **last commit's diff**. On a squash or a multi-commit push that is a partial picture; the agent sees it as "the diff", so treat its diff-based reasoning with that in mind.
 
@@ -97,18 +97,26 @@ To run unattended on an API key instead, add an API-key implementation of `LlmCl
 
 ## Evaluation
 
-14 cases (3 each for product bug, environment, flaky, test gap, plus 2 traps), in `evals/cases/`. Latest: [`evals/results/latest.md`](evals/results/latest.md). First run: [`evals/results/v1.md`](evals/results/v1.md).
+29 cases in `evals/cases/`: the original 14 (3 each for product bug, environment, flaky, test gap, plus 2 traps) and 15 added after the v2 prompt was frozen. Latest: [`evals/results/latest.md`](evals/results/latest.md). First run: [`evals/results/v1.md`](evals/results/v1.md).
 
 | Prompt | Accuracy | Notes |
 |---|---|---|
 | v1 | 12/14 | Misses: `fl-02` and `fl-03` (both expected flaky) |
-| v2 | 14/14 | Added the shared-state rule; fixed a flaw in case `fl-02` |
+| v2 | 14/14 on the original 14 | Added the shared-state rule; fixed a flaw in case `fl-02` |
+| v2, unchanged, on the 15 added cases | **12/15** | The held-out number. Misses: `mx-01`, `mx-02`, `pb-09` (below). Full run: [`evals/results/v2-29.md`](evals/results/v2-29.md) |
+
+**The 15 added cases** (`cohort: added-after-v2` in `case.json`, run with the prompt untouched):
+
+- **7 real product bugs never seen before** (DEF-02, 03, 04, 06, 08, 09, 11), using error text from a live run.
+- **3 real environment failures captured by breaking the stack on purpose:** `docker pause product-catalog` (504 wall, docker ps says "Paused", not "unhealthy") and `docker stop currency` (500s on every checkout; the stopped container is absent from docker ps). One of them (`mx-01`) is a `test.fail(DEF-05)` test that "passes" only because checkout is down.
+- **2 defects that are not in the defect log** (`pb-11` total omits shipping, `pb-12` recommendations crash). The right answer is `known_defect: null`, so these test for forced DEF matches.
+- **3 mixed-signal cases** (`mx-02` a 504 wall plus a unique price mismatch; `mx-03` flaky retry inside the checkout money flow; `mx-04` an unhealthy container plus a renamed `data-cy`).
 
 How to read that honestly:
 
-- **14 cases is directional, not statistically strong.**
-- **The v2 gain is tuned on the same 14 cases, not held out.** `fl-03` was fixed by a prompt rule written after seeing it miss. `fl-02` was a mistake in my case: its log said "server state correct", the same diagnostic that marks the DEF-10 trap, so two cases were indistinguishable. I removed that line and recorded the change in the case file. A held-out set is the next thing to build.
-- **Only 4 of 14 cases are real.** The three product-bug cases and `tr-02` use error text captured from `automation/test-results/results.json` (pinned demo `ac0443b`). The environment, flaky and test-gap cases are *constructed* in Playwright's real error format, because producing them for real means breaking the stack on purpose. Their logs also contain some diagnostics (such as "flag restored 800ms later") that a real CI log would only have if the test were written to print them. Real nightly failures will be harder.
+- **29 cases is directional, not statistically strong.**
+- **The v2 gain on the original 14 is tuned, not held out. The 15 added cases are the held-out check (12/15).** `fl-03` was fixed by a prompt rule written after seeing it miss. `fl-02` was a mistake in my case: its log said "server state correct", the same diagnostic that marks the DEF-10 trap, so two cases were indistinguishable. I removed that line and recorded the change in the case file. A held-out set is the next thing to build.
+- **14 of 29 cases are real** (4 original, 10 added). The real ones use error text, results and `docker ps` from live runs against the pinned demo `ac0443b`. **There is still no real flaky case**: a flake cannot be produced on demand (I tried restarting `cart` mid-run; the suite finished first). The flaky, test-gap and some environment cases are *constructed* in Playwright's real error format, because producing them for real means breaking the stack on purpose. Their logs also contain some diagnostics (such as "flag restored 800ms later") that a real CI log would only have if the test were written to print them. Real nightly failures will be harder.
 - **Beyond the class, four more things are scored**, against labels in each `case.json` that I wrote from the pod map and strategy doc (not copied from model output). Where policy allows several answers, the label lists them. (1) `next_action.type`; (2) `owner_pod`; (3) **false defect matches**: a DEF-xx named that is not the case's defect, or named when the case has none; (4) **escalation**: whether `needs_human` matches whether a person should look, split into *missed* (should have escalated, did not: the dangerous one) and *needless* (escalated when not needed: costs reviewer time). They are reported next to the success bar but are not part of it, because the bar was fixed before the first run. Current result: action 13/14, owner 13/14, false defect matches 0, escalation 8/14 with 0 missed and 6 needless. The needless escalations come mostly from the low-confidence and money-area guardrails, which are deliberately cautious. The `tr-01` miss is real: the agent routes a frontend cart bug to Checkout & Payments while the defect log lists the component as `frontend`.
 - Stability: the four delicate cases were run 3 times each with v2 and none changed class.
 

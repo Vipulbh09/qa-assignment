@@ -1,0 +1,15 @@
+Attempt 1 (failed):
+Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 125.89
+Received: 119.9
+
+  at checkout.spec.ts:21:41
+
+Attempt 2 (failed):
+Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 125.89
+Received: 119.9
+
+  at checkout.spec.ts:21:41

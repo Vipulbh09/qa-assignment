@@ -1,0 +1,1908 @@
+{
+  "promptVersion": "v2",
+  "model": "sonnet",
+  "ranAt": "2026-10-18T08:02:18.679Z",
+  "source": "local",
+  "runUrl": null,
+  "runsPerCase": 1,
+  "correct": 26,
+  "total": 29,
+  "accuracy": 0.896551724137931,
+  "knownDefect": {
+    "matched": 13,
+    "total": 13
+  },
+  "falseFlaky": 0,
+  "cohorts": {
+    "tuned": {
+      "total": 14,
+      "correct": 14,
+      "real": 4,
+      "realCorrect": 4
+    },
+    "heldOut": {
+      "total": 15,
+      "correct": 12,
+      "real": 10,
+      "realCorrect": 8
+    }
+  },
+  "nextAction": {
+    "action": 25,
+    "owner": 22,
+    "both": 21
+  },
+  "falseDefect": [
+    "mx-01-stale-annotation-masks-outage"
+  ],
+  "escalation": {
+    "right": 17,
+    "missed": [],
+    "needless": [
+      "env-05-currency-down-500",
+      "fl-01-flag-propagation",
+      "fl-02-ui-timeout",
+      "fl-03-shared-flag-race",
+      "mx-01-stale-annotation-masks-outage",
+      "pb-04-no-decline-message",
+      "pb-06-cvv-not-validated",
+      "pb-08-nano-drift",
+      "pb-09-fractional-yen",
+      "tg-02-stale-rate",
+      "tg-03-hardcoded-price",
+      "tr-02-stale-test-fail"
+    ]
+  },
+  "costUsd": 0.7041788,
+  "modelSeconds": 294.081,
+  "bar": [
+    {
+      "name": "at least 25/29 correct",
+      "pass": true
+    },
+    {
+      "name": "every high-confidence answer is correct",
+      "pass": true
+    },
+    {
+      "name": "no S1 product bug labelled flaky",
+      "pass": true
+    }
+  ],
+  "perClass": [
+    {
+      "c": "product_bug",
+      "precision": "100%",
+      "recall": "86%",
+      "actual": 14
+    },
+    {
+      "c": "flaky_test",
+      "precision": "100%",
+      "recall": "100%",
+      "actual": 4
+    },
+    {
+      "c": "environment_issue",
+      "precision": "83%",
+      "recall": "83%",
+      "actual": 6
+    },
+    {
+      "c": "test_gap",
+      "precision": "71%",
+      "recall": "100%",
+      "actual": 5
+    }
+  ],
+  "matrix": {
+    "product_bug": {
+      "product_bug": 12,
+      "flaky_test": 0,
+      "environment_issue": 1,
+      "test_gap": 1
+    },
+    "flaky_test": {
+      "product_bug": 0,
+      "flaky_test": 4,
+      "environment_issue": 0,
+      "test_gap": 0
+    },
+    "environment_issue": {
+      "product_bug": 0,
+      "flaky_test": 0,
+      "environment_issue": 5,
+      "test_gap": 1
+    },
+    "test_gap": {
+      "product_bug": 0,
+      "flaky_test": 0,
+      "environment_issue": 0,
+      "test_gap": 5
+    }
+  },
+  "calibration": [
+    {
+      "l": "high",
+      "n": 8,
+      "ok": 8
+    },
+    {
+      "l": "medium",
+      "n": 18,
+      "ok": 16
+    },
+    {
+      "l": "low",
+      "n": 3,
+      "ok": 2
+    }
+  ],
+  "unstable": [],
+  "cases": [
+    {
+      "id": "env-01-504-wall",
+      "category": "environment_issue",
+      "provenance": "constructed",
+      "cohort": "tuned",
+      "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > EUR price for a 1-9 cent product (Red Flashlight)",
+      "expected": {
+        "classification": "environment_issue",
+        "next_action": [
+          "restart_env"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "environment_issue",
+        "confidence": "high",
+        "summary": "GET /api/products?currencyCode=EUR returned 504 Gateway Timeout while checkout and product-catalog containers were unhealthy and 6 other api tests also failed with 504. The stack is broken, so this run says nothing about the EUR rounding behaviour the test targets.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "GET /api/products?currencyCode=EUR -> 504 Gateway Timeout (upstream request timeout)",
+            "why": "The failure is an upstream gateway timeout, not a wrong price or assertion on business data."
+          },
+          {
+            "source": "signal",
+            "quote": "checkout, product-catalog (unhealthy)",
+            "why": "Containers on the failing flow were unhealthy, so the results are untrustworthy."
+          },
+          {
+            "source": "signal",
+            "quote": "api tests failing with 504 # 6",
+            "why": "Six sibling api tests failed with 504 in the same run, which indicates a wall of gateway errors, not a single product defect."
+          },
+          {
+            "source": "diff",
+            "quote": "+# QA Assignment: OpenTelemetry Astronomy Shop",
+            "why": "The diff only changes the README, so no code change could have caused the failure."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "A 504 across many tests with unhealthy containers points to the stack, and the diff touches no product code. No wrong business value was observed, and no known defect (e.g. DEF-08) can be confirmed from a timeout."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "restart_env",
+          "detail": "Investigate and restart the unhealthy checkout and product-catalog containers, confirm the stack is healthy, then rerun the whole api project. TC-CHK-03 covers money and currency, so check its result after the rerun and don't treat it as passing from this run.",
+          "owner_pod": "Quality Platform"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "env-02-stack-down",
+      "category": "environment_issue",
+      "provenance": "constructed",
+      "cohort": "tuned",
+      "testName": "cart.spec.ts > TC-CART-01 cart operations (API) > adding the same product twice merges the line",
+      "expected": {
+        "classification": "environment_issue",
+        "next_action": [
+          "restart_env"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "environment_issue",
+        "confidence": "medium",
+        "summary": "The cart API call failed with ECONNREFUSED on 127.0.0.1:8080, and 12 other tests failed the same way. The frontend or proxy on port 8080 was most likely down or not listening, so this is a stack outage and not a cart bug.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "connect ECONNREFUSED 127.0.0.1:8080",
+            "why": "The connection was refused at the TCP level, so no request reached the app and no cart logic ran."
+          },
+          {
+            "source": "signal",
+            "quote": "api/ui test failing with ECONNREFUSED # 12",
+            "why": "There were 13 failures out of 49 executed tests, all with the same ECONNREFUSED error. That points to a shared cause and not one broken test."
+          }
+        ],
+        "alternative": {
+          "classification": "flaky_test",
+          "why_not": "The failure is not timing or shared state in this test. The port refused connections for many unrelated tests at once, and the diff is empty. A product bug is also ruled out because the cart logic never ran."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "restart_env",
+          "detail": "Check that the frontend or envoy proxy is up and listening on port 8080, restart the Docker Compose stack, and rerun the suite. No container was reported unhealthy, so check the container logs for the cause of the crash or restart. Retrying alone is unlikely to help.",
+          "owner_pod": "Quality Platform"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "env-03-service-unavailable",
+      "category": "environment_issue",
+      "provenance": "constructed",
+      "cohort": "tuned",
+      "testName": "payment.spec.ts > TC-PAY-01 card validation matrix > Mastercard is accepted",
+      "expected": {
+        "classification": "environment_issue",
+        "next_action": [
+          "restart_env"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "environment_issue",
+        "confidence": "high",
+        "summary": "The payment container is unhealthy and refusing connections (ECONNREFUSED). Checkout therefore can't charge cards, and every test that touches payment fails with 503. The diff only renames a test title in an unrelated UI spec, so it isn't the cause.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "payment | Error: 14 UNAVAILABLE: No connection established. Last error: connect ECONNREFUSED 172.18.0.14:8080",
+            "why": "The payment service is not accepting connections, so the stack is broken."
+          },
+          {
+            "source": "signal",
+            "quote": "payment (unhealthy)",
+            "why": "The run context and signals both flag the payment container as unhealthy, which makes this run untrustworthy."
+          },
+          {
+            "source": "log",
+            "quote": "checkout | rpc error: code = Unavailable desc = could not charge the card",
+            "why": "Checkout fails downstream because payment is unavailable. This is a dependency outage, not wrong business data."
+          },
+          {
+            "source": "diff",
+            "quote": "+test('home page lists products', async ({ pages }) => {",
+            "why": "The only change is a test title rename in an unrelated UI spec, so it can't explain the payment 503s."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "The payment service is down rather than behaving wrongly. The sibling failures (Visa, checkout happy path, order cost) all share the same dependency outage, and no wrong values appear in the log. The checkout error is a transport-level Unavailable, not a business-logic fault."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "restart_env",
+          "detail": "Restart or investigate the unhealthy payment container (check why it is refusing connections on port 8080), then rerun the api project. Don't file product bugs for TC-PAY-01, TC-CHK-01 or TC-CHK-02 until they fail on a healthy stack. TC-CHK-02 covers order cost (DEF-01, S1), so confirm it on the rerun.",
+          "owner_pod": "Quality Platform"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "env-04-paused-catalog-504",
+      "category": "environment_issue",
+      "provenance": "real",
+      "cohort": "heldOut",
+      "testName": "api/checkout.spec.ts > TC-CHK-02 displayed price equals charged price > National Park Foundation Explorascope: order cost equals catalogue price",
+      "expected": {
+        "classification": "environment_issue",
+        "next_action": [
+          "restart_env"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "environment_issue",
+        "confidence": "medium",
+        "summary": "Checkout API tests got 504 gateway timeouts, and 13 sibling tests in the same run failed too, including the smoke test. That points to a stack-wide problem, not a defect in one flow. The only diff change is a TODO comment in AdService, which doesn't touch checkout.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: 200\nReceived: 504",
+            "why": "A gateway timeout, not a wrong business value. The request never got a valid response."
+          },
+          {
+            "source": "diff",
+            "quote": "+      // TODO: cache ads per context key",
+            "why": "The only product change is a comment in the ad service. It has no behavioural effect and is not on the checkout flow."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "The diff adds only a comment in AdService, which is not on the checkout path. The failures are 504s, not wrong prices or totals. Known defects such as DEF-01 produce wrong values, not gateway errors."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "restart_env",
+          "detail": "Check the logs of the gateway, frontend and checkout services for the 504 cause, even though no container is reported unhealthy. Restart or recover the stack, then rerun api/checkout.spec.ts. If it still fails with wrong values after a healthy rerun, re-triage it.",
+          "owner_pod": "Quality Platform"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "env-05-currency-down-500",
+      "category": "environment_issue",
+      "provenance": "real",
+      "cohort": "heldOut",
+      "testName": "api/checkout.spec.ts > TC-CHK-01 happy path order (API) > USD order: totals, IDs and cart emptied @smoke",
+      "expected": {
+        "classification": "environment_issue",
+        "next_action": [
+          "restart_env"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
+      "got": {
+        "classification": "environment_issue",
+        "confidence": "medium",
+        "summary": "TC-CHK-01 got a 504 on attempt 1 and a 500 on attempt 2, and 13 sibling checkout tests failed in the same run. That points to a broken or overloaded stack rather than a product regression. The log is thin, though, and no container is reported unhealthy.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: 200\nReceived: 504",
+            "why": "Attempt 1 failed with a gateway timeout, not a wrong business value."
+          },
+          {
+            "source": "log",
+            "quote": "Expected: 200\nReceived: 500",
+            "why": "Attempt 2 also failed with a server error, so the retry did not recover. This suggests a persistent backend failure, or a failing downstream service."
+          },
+          {
+            "source": "diff",
+            "quote": "// TODO: cache ads per context key",
+            "why": "The only diff change is a comment in AdService, which is not on the checkout flow. The product-source signal does not fit here."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "The diff only adds a comment in AdService, which is not on the checkout flow. The failures are 504/500 across 14 of 19 tests, not wrong business values like the known DEF-01 or DEF-05 mismatches."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "restart_env",
+          "detail": "Check the logs of the checkout, cart, currency, payment, shipping and product-catalog services, plus frontend-proxy, for the source of the 504/500 responses. Restart or recover the stack, then rerun the api project. If TC-CHK-01 still fails on a healthy stack, triage it again as a possible checkout bug. Some sibling failures (TC-CHK-02 and TC-CHK-03) may also be real DEF-01, DEF-05 or DEF-11 failures that the outage hides, so recheck them after the rerun.",
+          "owner_pod": "Quality Platform"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "fl-01-flag-propagation",
+      "category": "flaky_test",
+      "provenance": "constructed",
+      "cohort": "tuned",
+      "testName": "payment-failure.spec.ts > TC-PAY-04 injected payment failure > most orders decline when paymentFailure is on",
+      "expected": {
+        "classification": "flaky_test",
+        "next_action": [
+          "fix_test",
+          "quarantine"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
+      "got": {
+        "classification": "flaky_test",
+        "confidence": "medium",
+        "summary": "TC-PAY-04 got 0 declines on attempt 1, then 19 of 20 on retry. The flag paymentFailure was set about 1s before the first order and flagd evaluation was never polled, so the flag probably hadn't propagated yet. This looks like a test race, not a product bug.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Note: flag paymentFailure set to 0.95 about 1s before the first order of attempt 1; flagd evaluation API not polled.",
+            "why": "The test did not wait for the flag to take effect before placing orders, which is a timing race."
+          },
+          {
+            "source": "log",
+            "quote": "Attempt 2 (passed): 19 of 20 orders declined with 422 PAYMENT_FAILED",
+            "why": "With the flag in effect, the product declines orders as expected, so the product is right."
+          },
+          {
+            "source": "signal",
+            "quote": "status: flaky (passed on retry)",
+            "why": "The test passed on retry with no code change, which fits a timing issue. The log shows no wrong business data, so it is not a DEF-10 style product bug."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "The retry shows the product declines orders correctly with 422 PAYMENT_FAILED. The diff is empty, and the log has no wrong business data, no server-state-versus-UI mismatch and no known defect. The failure matches a flag propagation race."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "fix_test",
+          "detail": "After setting paymentFailure, poll the flagd evaluation API until it returns the new value, and only then place orders. Do this instead of relying on a fixed delay. The test is a payment test, so a human may want to check that the 0-decline result was a propagation delay and not a real missed decline.",
+          "owner_pod": "Quality Platform"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "money/checkout area classified as flaky: escalated to a human"
+      ],
+      "stable": true
+    },
+    {
+      "id": "fl-02-ui-timeout",
+      "category": "flaky_test",
+      "provenance": "constructed",
+      "cohort": "tuned",
+      "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > Empty Cart clears the badge",
+      "expected": {
+        "classification": "flaky_test",
+        "next_action": [
+          "quarantine",
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Checkout & Payments",
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": false,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
+      "got": {
+        "classification": "flaky_test",
+        "confidence": "low",
+        "summary": "The 'cart-empty-message' locator was not found within 10s on attempt 1, then the same test passed on retry. The diff is empty, no sibling tests failed and all containers were healthy. The log has no server-state or business-data evidence, so this is only a flaky candidate. A DEF-10-style intermittent product bug can't be excluded.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Attempt 2 (passed) in 2.1s.",
+            "why": "The same test passed on retry with no change, which fits intermittent behaviour."
+          },
+          {
+            "source": "log",
+            "quote": "Locator: getByTestId('cart-empty-message')",
+            "why": "The failure is a missing element after Empty Cart. There is no wrong business data in the log."
+          },
+          {
+            "source": "signal",
+            "quote": "status: flaky (passed on retry)",
+            "why": "This is a flaky candidate only. It is not proof that the product is right."
+          },
+          {
+            "source": "log",
+            "quote": "Same locator and test code. No other test failed in this run. All containers healthy.",
+            "why": "This rules out an environment problem and a test change. It leaves a timing or intermittent UI cause."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "A DEF-10-style intermittent UI bug would need evidence that server state was correct while the UI showed something else, such as a stale quantity. The log only shows a missing element, with an empty diff and no wrong business data."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "rerun",
+          "detail": "Rerun the test several times with trace and cart-state capture, such as the cart API response and badge value on failure. If the UI shows stale cart content while the server cart is empty, reclassify as an intermittent product bug (DEF-10 pattern) and file it. Otherwise quarantine the test or add an explicit wait.",
+          "owner_pod": "Quality Platform"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "low confidence: escalated to a human"
+      ],
+      "stable": true
+    },
+    {
+      "id": "fl-03-shared-flag-race",
+      "category": "flaky_test",
+      "provenance": "constructed",
+      "cohort": "tuned",
+      "testName": "checkout.spec.ts > TC-CHK-01 happy path order (API) > order succeeds in USD",
+      "expected": {
+        "classification": "flaky_test",
+        "next_action": [
+          "fix_test",
+          "quarantine"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
+      "got": {
+        "classification": "flaky_test",
+        "confidence": "medium",
+        "summary": "The checkout API call returned 422 PAYMENT_FAILED on attempt 1 while a parallel flagd test had paymentFailure at 0.95. The flag was restored 800ms later and the retry passed. This is cross-test interference through shared stack state, so the test isolation is at fault. The product is behaving as configured.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Run context: this spec ran in the 'api' project, in parallel with another worker finishing a flagd test that had paymentFailure at 0.95. Flag was restored by its test 800ms later.",
+            "why": "A parallel test left the global paymentFailure flag on, which explains the payment failure."
+          },
+          {
+            "source": "log",
+            "quote": "body: {\"code\":\"PAYMENT_FAILED\"}",
+            "why": "The failure is the payment failure the flag injects, not wrong business data."
+          },
+          {
+            "source": "signal",
+            "quote": "status: flaky (passed on retry)",
+            "why": "The test passed on retry once the flag was restored, which fits transient shared state."
+          },
+          {
+            "source": "log",
+            "quote": "Attempt 2 (passed): 200, order placed.",
+            "why": "The order succeeded once the flag was back to normal, so the product is correct."
+          }
+        ],
+        "alternative": {
+          "classification": "environment_issue",
+          "why_not": "No sibling failures and no unhealthy containers. The stack was healthy, and tests disturbing each other through a flagd flag is a test-isolation flaw (rule 6)."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "fix_test",
+          "detail": "Isolate the flagd paymentFailure test from the parallel api project. Run it serially or in a dedicated project, or give it its own flagd scope, and always restore the flag in a finally/afterEach block. Quarantine the flagd test until that is done. Confidence is medium because the 422 was not directly tied to the flag by a timestamp in the log, but the overlap is strong.",
+          "owner_pod": "Quality Platform"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "money/checkout area classified as flaky: escalated to a human"
+      ],
+      "stable": true
+    },
+    {
+      "id": "mx-01-stale-annotation-masks-outage",
+      "category": "tricky",
+      "provenance": "real",
+      "cohort": "heldOut",
+      "testName": "api/checkout.spec.ts > TC-CHK-03 non-USD currency > unsupported currency code is rejected, not priced at zero",
+      "expected": {
+        "classification": "environment_issue",
+        "next_action": [
+          "restart_env"
+        ],
+        "owner_pod": [
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": false,
+      "actionOk": false,
+      "ownerOk": false,
+      "falseDefect": true,
+      "escalationOk": false,
+      "got": {
+        "classification": "test_gap",
+        "confidence": "medium",
+        "summary": "The test is annotated test.fail for DEF-05 but passed, so Playwright reports \"Expected to fail, but passed\". The defect looks fixed and the annotation is stale. The only diff is a comment in AdService, which is unrelated to currency or checkout.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Error: Expected to fail, but passed.",
+            "why": "The test body passed, so the unsupported currency was rejected. Only the test.fail annotation is making the run fail."
+          },
+          {
+            "source": "signal",
+            "quote": "test.fail(DEF-05) is unexpectedly passing",
+            "why": "Confirms the stale expected-failure pattern. Rule 3 says to classify this as test_gap."
+          },
+          {
+            "source": "diff",
+            "quote": "+      // TODO: cache ads per context key",
+            "why": "The only diff is a comment in the ad service. It does not touch currency or checkout, so it is not a product regression."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-05 (S1): An unknown currency prices everything at 0, and checkout accepts it",
+            "why": "The annotated defect matches the test name. The test passing means unknown currencies are now rejected."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "The test passed, so the product behaved correctly. The diff is a comment-only change in the ad service, not on the checkout or currency flow. The sibling failures were not explained by the log, so I treated them as a separate concern."
+        },
+        "known_defect": "DEF-05",
+        "next_action": {
+          "type": "fix_test",
+          "detail": "Verify that DEF-05 is really fixed. The 13 sibling failures in TC-CHK-01, TC-CHK-02 and TC-CHK-03 (EUR pricing, unsupported-currency order) need their own triage, because they could hide a currency or checkout regression. Then remove the test.fail('DEF-05') annotation from the unsupported-currency test and close the defect.",
+          "owner_pod": "Catalogue & Pricing"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "mx-02-wall-but-own-price-mismatch",
+      "category": "tricky",
+      "provenance": "constructed",
+      "cohort": "heldOut",
+      "testName": "api/checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-01",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing"
+        ],
+        "needs_human": true
+      },
+      "ok": false,
+      "actionOk": false,
+      "ownerOk": false,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "environment_issue",
+        "confidence": "medium",
+        "summary": "Five checkout-related tests fail in the same run while the checkout container is unhealthy, so the run can't be trusted. The 57.08 vs 57.8 value matches DEF-01, but it fails identically on both attempts and no product code changed, so DEF-01 is a real alternative.",
+        "evidence": [
+          {
+            "source": "signal",
+            "quote": "checkout (unhealthy)",
+            "why": "The checkout service was unhealthy during the run, so its results are unreliable."
+          },
+          {
+            "source": "signal",
+            "quote": "TC-CHK-01 happy path order (API) > USD order: totals, IDs and cart emptied @smoke",
+            "why": "Sibling failures across several checkout tests (5 of 49) point to a shared cause, not one test."
+          },
+          {
+            "source": "log",
+            "quote": "Expected: 57.08\nReceived: 57.8",
+            "why": "The value is exactly the DEF-01 signature, and it is identical on both attempts. This could be the product defect, not environment noise."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "The value matches DEF-01 exactly, but the checkout container is unhealthy and sibling checkout tests fail too (including EUR and the USD happy path). The run isn't trustworthy enough to confirm DEF-01 without a rerun on a healthy stack."
+        },
+        "known_defect": "DEF-01",
+        "next_action": {
+          "type": "restart_env",
+          "detail": "Restart or repair the unhealthy checkout container, then rerun the api checkout specs. If TC-CHK-02 still returns 57.8 instead of 57.08 on a healthy stack, confirm it as DEF-01 (S1) and escalate to Checkout & Payments.",
+          "owner_pod": "Quality Platform"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "mx-03-flaky-in-money-flow",
+      "category": "tricky",
+      "provenance": "constructed",
+      "cohort": "heldOut",
+      "testName": "ui/checkout.spec.ts > TC-CHK-01 happy path order (UI) > place an order and see the confirmation",
+      "expected": {
+        "classification": "flaky_test",
+        "next_action": [
+          "quarantine",
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Storefront",
+          "Quality Platform"
+        ],
+        "needs_human": true
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "flaky_test",
+        "confidence": "low",
+        "summary": "The confirmation text did not appear within 10s because the page was still on \"Placing order...\"; the retry passed. With no diff, no sibling failures and no server-side logs, this looks like a timing issue, but a slow or hung PlaceOrder cannot be ruled out.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "locator resolved to <h1>Placing order...</h1>",
+            "why": "The page was still in the in-progress state when the 10s timeout expired. It was not an error page and not wrong business data, which points to slow order placement or a short timeout."
+          },
+          {
+            "source": "signal",
+            "quote": "status: flaky (passed on retry)",
+            "why": "The test passed on retry, so it is a flaky candidate. The signal alone does not rule out an intermittent product bug."
+          },
+          {
+            "source": "log",
+            "quote": "Timeout: 10000ms",
+            "why": "The assertion timeout may be too short for the checkout chain (payment, shipping, email), which makes it a likely timing flake."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "Nothing in the log shows wrong money, currency or payment values. The UI was only mid-flow at the timeout, and the retry succeeded. The diff is empty, no sibling tests failed, and no container was unhealthy. This does not match any known defect, such as DEF-10 (stale cart quantity). I can't fully exclude a slow PlaceOrder, since there are no server logs."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "fix_test",
+          "detail": "Check the PlaceOrder latency in the checkout, payment and email service logs for this run. If it was just slow, raise the confirmation timeout or wait on the PlaceOrder response instead of a fixed 10s. If the order took more than 10s repeatedly, file a performance bug. Quarantine only if it recurs.",
+          "owner_pod": "Quality Platform"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "low confidence: escalated to a human"
+      ],
+      "stable": true
+    },
+    {
+      "id": "mx-04-unhealthy-noise-but-renamed-hook",
+      "category": "tricky",
+      "provenance": "constructed",
+      "cohort": "heldOut",
+      "testName": "ui/cart.spec.ts > TC-CART-01 cart lifecycle (UI) > Empty Cart clears the badge",
+      "expected": {
+        "classification": "test_gap",
+        "next_action": [
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Storefront",
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "test_gap",
+        "confidence": "medium",
+        "summary": "The diff renamed the EmptyCart attribute from data-cy=\"cart-empty-message\" to \"empty-cart-message\", so the test's getByTestId('cart-empty-message') locator finds nothing on both attempts. The checkout container is unhealthy, but the failure is a deterministic locator miss that matches the rename, so the stale selector is the likely cause.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Locator: getByTestId('cart-empty-message')",
+            "why": "The test looks for the old identifier."
+          },
+          {
+            "source": "log",
+            "quote": "Error: element(s) not found",
+            "why": "The element is absent on both attempts, so the failure is deterministic and not a timing issue."
+          },
+          {
+            "source": "diff",
+            "quote": "+    <S.EmptyCart data-cy=\"empty-cart-message\">",
+            "why": "The product attribute was renamed, so the test's locator no longer matches."
+          },
+          {
+            "source": "signal",
+            "quote": "checkout (unhealthy)",
+            "why": "A container is unhealthy, but checkout is not involved in rendering the empty-cart message and there are no sibling failures."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "The message text is still rendered and only the test id changed. That is an intentional-looking rename, not wrong behaviour. Whether the rename was intended and the test is simply stale is not confirmed, so that is the main uncertainty."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "fix_test",
+          "detail": "Check the rename with the Storefront team. If it was intended, update the locator to 'empty-cart-message'. If it wasn't, revert the rename. Also check that the testIdAttribute config maps to data-cy, and look at the unhealthy checkout container separately.",
+          "owner_pod": "Storefront"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "pb-01-price-shift",
+      "category": "product_bug",
+      "provenance": "real",
+      "cohort": "tuned",
+      "testName": "checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-01",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing"
+        ],
+        "needs_human": true
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "high",
+        "summary": "The order cost came back as 57.8 instead of the catalogue price 57.08, which is the DEF-01 symptom. The diff changes how getDouble in the currency service reads nanos, and that code is on the failing price flow. Checkout money values are wrong, so this needs a human (S1).",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: 57.08\nReceived: 57.8",
+            "why": "The charged cost drops the leading zero of the cents (08 becomes 8). This is the DEF-01 signature, and the test assertion itself is correct."
+          },
+          {
+            "source": "diff",
+            "quote": "for (char c : std::to_string(m.nanos())) { frac += (c - '0') * scale; scale /= 10; }",
+            "why": "to_string(nanos) has no leading zeros, so 80000000 and 8000000 give the same fraction. A value like .08 is read as .8 in this product code on the currency flow."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-01 (S1): Order cost differs from the displayed price ($57.08 shown, $57.80 costed)",
+            "why": "This is the same price and the same symptom as the known defect."
+          }
+        ],
+        "alternative": {
+          "classification": "test_gap",
+          "why_not": "The expected value of 57.08 is the correct catalogue price and the test has no locator or stale-annotation problem. The diff changes product source, not test code. The log shows a wrong money value."
+        },
+        "known_defect": "DEF-01",
+        "next_action": {
+          "type": "file_bug",
+          "detail": "Link this to DEF-01 as an S1 defect. The getDouble change in src/currency/src/server.cpp parses std::to_string(m.nanos()) digit by digit, which drops leading zeros of the 9-digit nanos field (for example 8000000 is read as .8). Revert the change, or zero-pad nanos to 9 digits, or compute units + nanos / 1e9. Add a regression test for prices with 1-9 cents.",
+          "owner_pod": "Catalogue & Pricing"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "pb-02-free-goods",
+      "category": "product_bug",
+      "provenance": "real",
+      "cohort": "tuned",
+      "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > unsupported currency code is rejected, not priced at zero",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-05",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing"
+        ],
+        "needs_human": true
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "medium",
+        "summary": "The test expects an unsupported currency code to be rejected, but the assertion `expect(received).toBeGreaterThan(expected)` got 0 where it expected more than 0. This matches DEF-05, where an unknown currency prices everything at 0 and checkout accepts it. The diff is empty and the stack is healthy, so the product is the likely cause.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: > 0n\nReceived:   0n",
+            "why": "A zero value was returned where a positive value was expected. This is consistent with an unknown currency being priced at 0."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-05 (S1): An unknown currency prices everything at 0, and checkout accepts it",
+            "why": "The defect matches the test name and the zero value in the assertion."
+          }
+        ],
+        "alternative": {
+          "classification": "test_gap",
+          "why_not": "The diff is empty, so no test code or locator changed. The test is not marked test.fail and the failure matches a known product defect. The log has an odd error title ('Solar System Color Imager'), but the assertion failure fits DEF-05."
+        },
+        "known_defect": "DEF-05",
+        "next_action": {
+          "type": "file_bug",
+          "detail": "This is a DEF-05 regression or still-open case: an unsupported currency code is priced at 0 and not rejected. Confirm that the test carries a test.fail('DEF-05') annotation, or link the failure to the open defect. Escalate for S1 triage because it involves money and currency.",
+          "owner_pod": "Catalogue & Pricing"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "pb-03-cart-poisoned",
+      "category": "product_bug",
+      "provenance": "real",
+      "cohort": "tuned",
+      "testName": "cart.spec.ts > TC-CART-02 invalid quantities and products are rejected > unknown product ID is rejected and does not break the cart",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-07",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Checkout & Payments"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "high",
+        "summary": "The cart API accepted an unknown product ID (200 instead of >=400), and the next cart read returned 500 with Product Not Found. This is the known DEF-07 behaviour. The diff only adds a comment, so it did not cause the failure.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: >= 400\nReceived:    200",
+            "why": "The cart accepted an unknown product, but the test expects it to be rejected."
+          },
+          {
+            "source": "log",
+            "quote": "frontend | GET /api/cart 500",
+            "why": "The cart read broke after the invalid add, which is the DEF-07 symptom."
+          },
+          {
+            "source": "log",
+            "quote": "5 NOT_FOUND: Product Not Found: NOT-A-PRODUCT",
+            "why": "The unknown product ID is persisted in the cart and then fails on lookup."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-07 (S2): An unknown product silently breaks the cart (it looks empty, checkout is impossible)",
+            "why": "The failure matches this known defect exactly."
+          },
+          {
+            "source": "diff",
+            "quote": "+        // TODO: log the product id for debugging",
+            "why": "The diff is a comment-only change to AddItem, so it is not a new regression. AddItem still has no product validation."
+          }
+        ],
+        "alternative": {
+          "classification": "test_gap",
+          "why_not": "The test's expectation is correct: unknown products should be rejected. It has no test.fail('DEF-07') annotation that could be stale, and the log shows real wrong behaviour rather than a locator problem."
+        },
+        "known_defect": "DEF-07",
+        "next_action": {
+          "type": "file_bug",
+          "detail": "Link this failure to DEF-07. CartService.AddItem should validate the product ID against the product catalogue and return an error for unknown products. Confirm whether the test should carry test.fail('DEF-07') until the fix lands.",
+          "owner_pod": "Checkout & Payments"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "pb-04-no-decline-message",
+      "category": "product_bug",
+      "provenance": "real",
+      "cohort": "heldOut",
+      "testName": "ui/payment.spec.ts > TC-PAY-02 declined payment feedback > shopper sees a message when the card is declined",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-02",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Storefront"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": false,
+      "falseDefect": false,
+      "escalationOk": false,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "medium",
+        "summary": "The declined-payment test expects a \"payment could not be processed\" message and none appears within 10s. This matches known defect DEF-02, where a declined payment shows the shopper no message. The diff only touches an unrelated ad service comment.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Locator: getByText(/payment could not be processed/i)\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found",
+            "why": "The expected decline message never rendered, which is consistent with the UI showing nothing to the shopper."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-02 (S2): A declined payment shows the shopper no message",
+            "why": "The symptom matches this documented defect exactly."
+          }
+        ],
+        "alternative": {
+          "classification": "test_gap",
+          "why_not": "The test has no test.fail('DEF-02') annotation (annotations is empty), so it is not a stale-annotation case. The log also shows no locator or selector change, since the diff touches no test code. A test_gap would fit if the intended wording of the message has changed, but nothing in the input suggests that."
+        },
+        "known_defect": "DEF-02",
+        "next_action": {
+          "type": "file_bug",
+          "detail": "This is a known defect, DEF-02. Link this failure to it and check whether the test should carry a test.fail('DEF-02') annotation, since \"annotations\" is empty. The AdService.java diff is only a TODO comment and is unrelated. Review the payment decline handling in checkout and the frontend error display.",
+          "owner_pod": "Checkout & Payments"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "pb-05-negative-quantity",
+      "category": "product_bug",
+      "provenance": "real",
+      "cohort": "heldOut",
+      "testName": "api/cart.spec.ts > TC-CART-02 invalid quantities and products are rejected > negative quantity on an empty cart",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-03",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Checkout & Payments"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "medium",
+        "summary": "The cart API returned 200 for a negative quantity on an empty cart, and the test expects a rejection (status >= 400). This matches known defect DEF-03, where the cart accepts negative and zero quantities. The ad service diff is unrelated to the cart.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: >= 400\nReceived:    200",
+            "why": "The cart accepted a negative quantity instead of rejecting it, so the product behaves wrongly and the test expectation is correct."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-03 (S2): The cart accepts negative and zero quantities",
+            "why": "This is the documented defect, and it matches the observed behaviour exactly."
+          },
+          {
+            "source": "diff",
+            "quote": "// TODO: cache ads per context key",
+            "why": "The only diff change is a comment in AdService, which is not on the cart flow. It is not the cause, so the failure is the existing defect."
+          }
+        ],
+        "alternative": {
+          "classification": "test_gap",
+          "why_not": "The run context shows annotations: [], so the test may be missing a test.fail('DEF-03') annotation. But the test assertion is correct and the product really is wrong, so this is not a stale or wrong test. Whether the annotation was ever there is not in the input."
+        },
+        "known_defect": "DEF-03",
+        "next_action": {
+          "type": "file_bug",
+          "detail": "Link this failure to DEF-03: the cart add-item endpoint must reject zero and negative quantities with a 4xx. Check whether the test should carry test.fail('DEF-03') until the fix lands, because the run context shows no annotations.",
+          "owner_pod": "Checkout & Payments"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "pb-06-cvv-not-validated",
+      "category": "product_bug",
+      "provenance": "real",
+      "cohort": "heldOut",
+      "testName": "api/payment.spec.ts > TC-PAY-01 card validation matrix > CVV 0 is rejected",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-06",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Checkout & Payments"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "medium",
+        "summary": "The payment API accepted a card with CVV 0 (HTTP 200) where the test expects a 422 rejection. This matches known defect DEF-06, where payment skips CVV validation. The AdService diff is unrelated to the payment flow.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: 422\nReceived: 200",
+            "why": "The payment endpoint accepted an invalid CVV instead of rejecting it."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-06 (S2): Payment skips CVV and expiry-month validation",
+            "why": "This is the documented behaviour that explains the missing CVV rejection."
+          }
+        ],
+        "alternative": {
+          "classification": "test_gap",
+          "why_not": "The test expectation of 422 for an invalid CVV is correct. There is no test.fail('DEF-06') annotation, and the annotations list is empty. The failure is not a locator or stale-value problem."
+        },
+        "known_defect": "DEF-06",
+        "next_action": {
+          "type": "file_bug",
+          "detail": "Confirm the failure is DEF-06 (payment accepts CVV 0). If it is not already tracked, file or link it. If the defect is expected to stay open, add test.fail('DEF-06') to this case. The AdService.java diff is a comment-only change and is unrelated.",
+          "owner_pod": "Checkout & Payments"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "pb-07-past-expiry-months",
+      "category": "product_bug",
+      "provenance": "real",
+      "cohort": "heldOut",
+      "testName": "ui/payment.spec.ts > TC-PAY-03 expiry selector > past months of the current year cannot be selected",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-04",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Storefront"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": false,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "medium",
+        "summary": "TC-PAY-03 expects past months (January) in the expiry selector to be disabled, but the option is enabled. This matches known defect DEF-04, where the expiry selector offers past months. The diff touches only an unrelated AdService comment, so the product behaviour is wrong and the test is right.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: disabled\nReceived: enabled",
+            "why": "The past month option (January) is selectable, which is the wrong product behaviour the test is checking."
+          },
+          {
+            "source": "log",
+            "quote": "24 × locator resolved to <option value=\"1\">January</option>",
+            "why": "The locator resolved correctly and uniquely, so this is not a stale selector. The element exists and is enabled."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-04 (S3): The expiry selector offers past months",
+            "why": "Matches the known defect exactly."
+          },
+          {
+            "source": "diff",
+            "quote": "+      // TODO: cache ads per context key",
+            "why": "The diff is only a comment in the ad service, unrelated to the payment flow. The product-source signal is not relevant here."
+          }
+        ],
+        "alternative": {
+          "classification": "test_gap",
+          "why_not": "The locator resolved to the expected option and the test assertion is correct. The rule-based locator-failure signal is a timeout on the assertion value, not a missing element. The test has no test.fail('DEF-04') annotation, but the defect is still open, so the failure reflects the real bug. A missing annotation is a minor follow-up, not the cause."
+        },
+        "known_defect": "DEF-04",
+        "next_action": {
+          "type": "file_bug",
+          "detail": "Link this failure to DEF-04 (expiry selector offers past months). The fix is to disable past months of the current year in the selector. Until it is fixed, consider adding a test.fail('DEF-04') annotation to TC-PAY-03 so CI stays green and flags when the fix lands.",
+          "owner_pod": "Checkout & Payments"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "pb-08-nano-drift",
+      "category": "product_bug",
+      "provenance": "real",
+      "cohort": "heldOut",
+      "testName": "api/checkout.spec.ts > TC-CHK-02 displayed price equals charged price > order cost is exact to the nano (no float round-trip)",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-08",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "medium",
+        "summary": "The order cost came back 1 nano low (209949999999n instead of 209950000000n), which is the float round-trip error the test checks for. The failure is deterministic, the stack is healthy, and the money value is wrong, so I treat it as a product bug that probably matches DEF-08. The diff does not explain it.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: 209950000000n\nReceived: 209949999999n",
+            "why": "The value is off by exactly 1 nano, which points to float truncation in the money arithmetic, not a UI or locator problem."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-08 (S3): Converted prices drift below a cent",
+            "why": "Sub-cent drift in converted prices is the closest known defect to a 1-nano discrepancy. DEF-01 is a different, digit-level mismatch."
+          },
+          {
+            "source": "diff",
+            "quote": "// TODO: cache ads per context key",
+            "why": "The only diff change is a comment in AdService, which is unrelated to checkout or currency. The product-source signal is therefore misleading and I discount it."
+          }
+        ],
+        "alternative": {
+          "classification": "test_gap",
+          "why_not": "The test asserts exact nano precision on purpose and is not marked test.fail, so the expectation looks correct. There is no sign of a stale selector or a wrong expected value."
+        },
+        "known_defect": "DEF-08",
+        "next_action": {
+          "type": "file_bug",
+          "detail": "Confirm whether this is DEF-08. Check the currency and checkout conversion path for float or double use in the units/nanos math, and use integer or decimal arithmetic instead. If it is DEF-08, add a test.fail('DEF-08') annotation for TC-CHK-02. Since it affects order cost, a human should review the severity.",
+          "owner_pod": "Catalogue & Pricing"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "pb-09-fractional-yen",
+      "category": "product_bug",
+      "provenance": "real",
+      "cohort": "heldOut",
+      "testName": "api/checkout.spec.ts > TC-CHK-03 non-USD currency > JPY prices have no fractional yen",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-09",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing"
+        ],
+        "needs_human": false
+      },
+      "ok": false,
+      "actionOk": false,
+      "ownerOk": false,
+      "falseDefect": false,
+      "escalationOk": false,
+      "got": {
+        "classification": "test_gap",
+        "confidence": "low",
+        "summary": "The JPY fractional-yen check received 563467492 instead of 0, and the error message is \"Solar System Color Imager\", which looks like a product name and not an assertion message. This likely relates to DEF-09 (JPY fractional yen), but the log is thin, and the AdService diff only adds a comment and is unrelated to the flow. A human needs to confirm whether the assertion is wrong or DEF-09 is reproducing.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: 0\nReceived: 563467492",
+            "why": "The assertion that fractional yen equals 0 failed. The received value is a large number, so the check may be reading the wrong field or the wrong units."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-09 (S3): JPY prices shown with fractional yen",
+            "why": "The failing test checks for exactly this behaviour, so a product defect is plausible."
+          },
+          {
+            "source": "diff",
+            "quote": "// TODO: cache ads per context key",
+            "why": "The only change is a comment in AdService, which is not on the checkout or currency flow."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "A DEF-09 product bug is plausible. But the received value of 563467492 is not a fractional-yen amount, the error text is a product name, and the diff is a comment-only change in an unrelated service. Together these suggest the test is reading the wrong field or has a stale expectation. I can't confirm a product defect from this log."
+        },
+        "known_defect": "DEF-09",
+        "next_action": {
+          "type": "escalate_human",
+          "detail": "Inspect the TC-CHK-03 JPY assertion. Check what field it reads (the received value 563467492 looks like a units/nanos value, not a fractional-yen check) and why the error message is a product name. If the test is correct and DEF-09 still reproduces, add test.fail('DEF-09'). Otherwise fix the assertion.",
+          "owner_pod": "Quality Platform"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "pb-10-currency-list-polluted",
+      "category": "product_bug",
+      "provenance": "real",
+      "cohort": "heldOut",
+      "testName": "api/checkout.spec.ts > TC-CHK-03 non-USD currency > an unknown currency code is not added to the supported list",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-11",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "medium",
+        "summary": "The supported currency list returned by the API contains the unknown code \"QEX\", so an unknown currency was added to the list for all shoppers. This matches DEF-11. The diff only adds a comment in AdService, which is unrelated, so the product defect is existing and not caused by this change.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected value: not \"QEX\"",
+            "why": "The test asserts an unknown currency must not be in the supported list."
+          },
+          {
+            "source": "log",
+            "quote": "Received array:     [\"QEX\", \"XXX\", \"ZAR\", \"ISK\"",
+            "why": "QEX (and XXX) are present in the supported list, which means a bogus currency leaked in."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-11 (S2): An unknown currency is added to the supported list for every shopper",
+            "why": "Exactly matches the observed behaviour."
+          }
+        ],
+        "alternative": {
+          "classification": "flaky_test",
+          "why_not": "The assertion is deterministic and the list holds the leaked QEX value. It could be shared-state pollution from a parallel test, but there is no sign of that and it matches known DEF-11 behaviour."
+        },
+        "known_defect": "DEF-11",
+        "next_action": {
+          "type": "file_bug",
+          "detail": "Confirm this is DEF-11 (unknown currency added to the supported list) and link the failing run to it. The AdService diff is a comment only and unrelated. Check that the currency service rejects unknown codes and that earlier tests did not leave QEX in the shared list.",
+          "owner_pod": "Catalogue & Pricing"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "pb-11-novel-total-omits-shipping",
+      "category": "product_bug",
+      "provenance": "constructed",
+      "cohort": "heldOut",
+      "testName": "api/checkout.spec.ts > TC-CHK-01 happy path order (API) > USD order: totals, IDs and cart emptied @smoke",
+      "expected": {
+        "classification": "product_bug",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing"
+        ],
+        "needs_human": true
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": false,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "high",
+        "summary": "The order total is 119.9 instead of 125.89. The diff removes the shipping cost from the total in checkout PlaceOrder, so the order is under-charged by about 5.99. The test expectation is correct, and the UI sibling fails the same way.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: 125.89\nReceived: 119.9",
+            "why": "The total is lower than expected by 5.99, which matches a missing shipping cost. Both attempts fail identically, so this is deterministic."
+          },
+          {
+            "source": "diff",
+            "quote": "-\ttotal = money.Must(money.Sum(total, *prep.shippingCostLocalized))",
+            "why": "The change removes shipping from the order total in src/checkout/main.go, on the failing flow."
+          },
+          {
+            "source": "signal",
+            "quote": "diff --git a/src/checkout/main.go",
+            "why": "Product source changed on the checkout flow."
+          },
+          {
+            "source": "log",
+            "quote": "TC-CHK-01 happy path order (UI) > place an order and see the confirmation",
+            "why": "The UI sibling test also fails, which fits a backend regression rather than a test-specific issue."
+          }
+        ],
+        "alternative": {
+          "classification": "test_gap",
+          "why_not": "The expected value 125.89 is correct, since it includes shipping. The diff changes product code, not the test, and there is no locator problem."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "file_bug",
+          "detail": "Revert the removal of the shipping cost sum in src/checkout/main.go PlaceOrder. The order total is under-charged by the shipping amount (119.9 vs 125.89). This is S1 money territory, so block the merge and have a human review it.",
+          "owner_pod": "Checkout & Payments"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "pb-12-novel-recommendations-crash",
+      "category": "product_bug",
+      "provenance": "constructed",
+      "cohort": "heldOut",
+      "testName": "ui/checkout.spec.ts > TC-CHK-01 happy path order (UI) > product page shows recommendations",
+      "expected": {
+        "classification": "product_bug",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Storefront"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "high",
+        "summary": "The recommendations API returns 500 because the diff changed the handler to read `result.ids`, but the old code destructured `productIds` from the gateway response. `result.ids` is undefined, so `.map` throws and the recommendation list never renders. It failed on both attempts, and the test's locator is fine.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "TypeError: Cannot read properties of undefined (reading 'map')",
+            "why": "The handler throws on an undefined value before it can return recommendations."
+          },
+          {
+            "source": "log",
+            "quote": "GET /api/recommendations?productIds=OLJCESPC7Z 500 (Internal Server Error)",
+            "why": "The backend endpoint fails with a 500, so the UI has nothing to render."
+          },
+          {
+            "source": "diff",
+            "quote": "+      const productList = await Promise.all(result.ids.map(id => ProductCatalogService.getProduct(id, currencyCode as string)));",
+            "why": "The diff reads `result.ids`. The removed line destructured `productIds`, so the field name is likely wrong."
+          },
+          {
+            "source": "signal",
+            "quote": "diff --git a/src/frontend/pages/api/recommendations.ts",
+            "why": "The product source change sits on the failing flow."
+          }
+        ],
+        "alternative": {
+          "classification": "test_gap",
+          "why_not": "The locator hint fired, but the diff touches no test code or page objects. The element is missing because the handler throws a 500, not because the selector is stale."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "file_bug",
+          "detail": "Fix src/frontend/pages/api/recommendations.ts. The handler reads result.ids, but the gateway response field is productIds. Use result.productIds or revert the change, then rerun TC-CHK-01.",
+          "owner_pod": "Storefront"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "tg-01-renamed-hook",
+      "category": "test_gap",
+      "provenance": "constructed",
+      "cohort": "tuned",
+      "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > quantity can be changed on the cart page",
+      "expected": {
+        "classification": "test_gap",
+        "next_action": [
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Storefront"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "test_gap",
+        "confidence": "medium",
+        "summary": "The test can't find getByTestId('cart-item-quantity') because the diff renamed the product's data-cy hook to 'cart-item-qty'. The element is missing, not wrong, so the selector is stale. The test also failed on retry, so the failure is deterministic.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Error: element(s) not found",
+            "why": "The element is absent. No wrong value or wrong behaviour is reported."
+          },
+          {
+            "source": "diff",
+            "quote": "-        <S.Quantity data-cy=\"cart-item-quantity\" value={quantity} onChange={onChange} />",
+            "why": "The hook the test looks for was removed from the product markup."
+          },
+          {
+            "source": "diff",
+            "quote": "+        <S.Quantity data-cy=\"cart-item-qty\" value={quantity} onChange={onChange} />",
+            "why": "The hook was renamed to cart-item-qty, so the test's selector no longer matches."
+          },
+          {
+            "source": "signal",
+            "quote": "waiting for getByTestId('cart-item-quantity')",
+            "why": "The locator times out waiting for the old hook name."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "The product still renders the quantity input under a new hook. The log shows no wrong quantity or behaviour, only a missing locator. It would be a product bug only if the rename was unintended and the old hook is a contract to keep."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "fix_test",
+          "detail": "Update the cart page object and test to use the new hook 'cart-item-qty'. Confirm with the author of the CartItem.tsx change that the rename is intended. If it isn't, revert the rename instead. DEF-10 does not apply, because the element is missing rather than showing a stale value.",
+          "owner_pod": "Storefront"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "tg-02-stale-rate",
+      "category": "test_gap",
+      "provenance": "constructed",
+      "cohort": "tuned",
+      "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > EUR price for The Comet Book",
+      "expected": {
+        "classification": "test_gap",
+        "next_action": [
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing",
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
+      "got": {
+        "classification": "test_gap",
+        "confidence": "medium",
+        "summary": "The EUR price assertion is off by one cent (expected 0.88, received 0.87). The diff changes the test's EUR_RATE constant from 1.1305, which matched the currency server, to a rounded 1.13, so the test's expected value is probably stale or wrong. No product source changed.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: 0.88",
+            "why": "The expected value is computed in the test from the EUR_RATE constant."
+          },
+          {
+            "source": "log",
+            "quote": "Received: 0.87",
+            "why": "The product returned a value one cent lower than the test computed."
+          },
+          {
+            "source": "diff",
+            "quote": "-export const EUR_RATE = 1.1305; // USD per EUR, src/currency/src/server.cpp",
+            "why": "The old constant matched the currency server rate."
+          },
+          {
+            "source": "diff",
+            "quote": "+export const EUR_RATE = 1.13; // USD per EUR",
+            "why": "The rounded rate and the dropped source reference explain the one-cent mismatch."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "No product source changed, and the only diff moves the test constant away from the server's rate. It could still be DEF-08 (sub-cent drift), but the rate edit explains the mismatch without a product defect."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "fix_test",
+          "detail": "Restore EUR_RATE to 1.1305 (the value in src/currency/src/server.cpp), or read it from the product, and re-run TC-CHK-03. If it still fails with the correct rate, check rounding against DEF-08. A human should confirm the rate because this is currency.",
+          "owner_pod": "Catalogue & Pricing"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "1 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
+      "id": "tg-03-hardcoded-price",
+      "category": "test_gap",
+      "provenance": "constructed",
+      "cohort": "tuned",
+      "testName": "checkout.spec.ts > TC-CHK-01 happy path order (UI) > cart totals before placing the order",
+      "expected": {
+        "classification": "test_gap",
+        "next_action": [
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing",
+          "Checkout & Payments",
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
+      "got": {
+        "classification": "test_gap",
+        "confidence": "medium",
+        "summary": "Cart subtotal shows $358.00 but the test expects $350.00. The diff raised the Solar System Color Imager seed price from 175 to 179, and 2 × $4 = $8 explains the gap exactly. The UI matches the new catalogue price, so the hardcoded expectation looks stale.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Expected: \"$350.00\"",
+            "why": "The test hardcodes 2 × 175 as the subtotal."
+          },
+          {
+            "source": "log",
+            "quote": "Received: \"$358.00\"",
+            "why": "The received value is $8 higher, which equals 2 × the $4 price increase, so the UI is consistent with the new price."
+          },
+          {
+            "source": "diff",
+            "quote": "+('0PUK6V6EV0', 'Solar System Color Imager', '...', 'SolarSystemColorImager.jpg', 179, 0, 'accessories,telescopes'),",
+            "why": "The seed price changed from 175 to 179, so the old expected value is outdated."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "The diff touches product source on this flow, but the subtotal matches the new seed price exactly and no log line shows the UI diverging from the catalogue (unlike DEF-01). It would be a product bug only if the price change was unintended. The log is thin, so I can't confirm the intent."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "fix_test",
+          "detail": "Update the TC-CHK-01 expected cart subtotal to match the new price of 179, or derive it from a shared price constant or the catalogue instead of hardcoding it. Confirm with Catalogue & Pricing that the 175 to 179 change was intended. This is a checkout money value, so a human should check that the order total still matches the displayed price.",
+          "owner_pod": "Checkout & Payments"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "tr-01-intermittent-product-bug",
+      "category": "tricky",
+      "provenance": "constructed",
+      "cohort": "tuned",
+      "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > cart page shows the merged quantity without a reload",
+      "expected": {
+        "classification": "product_bug",
+        "known_defect": "DEF-10",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Storefront"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": false,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "high",
+        "summary": "The cart page showed quantity 1 while GET /api/cart returned 3, so the server state was correct and the UI was stale until a reload. This is the intermittent DEF-10 stale-quantity bug. It passed on retry only because the bug shows up about 1 run in 3.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "GET /api/cart (same shopper) -> items: [{ productId: \"L9ECAV7KIM\", quantity: 3 }]   <- server holds 3",
+            "why": "The server state is correct, so the wrong value is in the UI layer."
+          },
+          {
+            "source": "log",
+            "quote": "page shows 1 until reload",
+            "why": "The UI displays a stale quantity, which is the DEF-10 symptom."
+          },
+          {
+            "source": "signal",
+            "quote": "status: flaky (passed on retry)",
+            "why": "The failure is intermittent, which matches DEF-10 (about 1 run in 3). Rule 2 says not to call this flaky."
+          },
+          {
+            "source": "log",
+            "quote": "Attempt 2 (passed). Same code, no environment problems, all containers healthy.",
+            "why": "This rules out an environment cause. The test and the code were the same on both attempts."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-10 (S2): Stale quantity on the cart page, about 1 run in 3 (**intermittent**)",
+            "why": "The known defect matches the symptom and the intermittent rate."
+          }
+        ],
+        "alternative": {
+          "classification": "flaky_test",
+          "why_not": "The test assertion is correct. The server holds 3 and the UI shows 1, which is a product defect and not a timing problem in the test. Rule 2 says not to call an intermittent product bug flaky."
+        },
+        "known_defect": "DEF-10",
+        "next_action": {
+          "type": "file_bug",
+          "detail": "Link this occurrence to DEF-10: the cart page shows quantity 1 while /api/cart returns 3 until reload. Add the run artifacts to the existing defect. Keep the test unquarantined so it keeps catching the bug.",
+          "owner_pod": "Checkout & Payments"
+        },
+        "needs_human": false
+      },
+      "guardrailNotes": [],
+      "stable": true
+    },
+    {
+      "id": "tr-02-stale-test-fail",
+      "category": "tricky",
+      "provenance": "real",
+      "cohort": "tuned",
+      "testName": "checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
+      "expected": {
+        "classification": "test_gap",
+        "known_defect": "DEF-01",
+        "next_action": [
+          "fix_test"
+        ],
+        "owner_pod": [
+          "Catalogue & Pricing",
+          "Quality Platform"
+        ],
+        "needs_human": false
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": false,
+      "got": {
+        "classification": "test_gap",
+        "confidence": "high",
+        "summary": "TC-CHK-02 is annotated test.fail for DEF-01 but now passes. The diff replaces the buggy string-based nanos parsing in the currency service with `m.units() + m.nanos() / 1e9`, so DEF-01 looks fixed and the annotation is stale. This is S1 money behaviour, so a human should confirm the fix before the annotation is removed.",
+        "evidence": [
+          {
+            "source": "log",
+            "quote": "Error: Expected to fail, but passed.",
+            "why": "The test.fail(DEF-01) annotation no longer matches reality. The order cost now equals the catalogue price."
+          },
+          {
+            "source": "signal",
+            "quote": "test.fail(DEF-01) is unexpectedly passing",
+            "why": "The stale-expected-failure signal agrees with the log. The defect is probably fixed."
+          },
+          {
+            "source": "diff",
+            "quote": "+  return m.units() + m.nanos() / 1e9;",
+            "why": "The currency conversion now computes the fractional part correctly. The old loop mis-parsed nanos, which is a plausible cause of the $57.08 vs $57.80 mismatch."
+          },
+          {
+            "source": "known_defect",
+            "quote": "DEF-01 (S1): Order cost differs from the displayed price ($57.08 shown, $57.80 costed)",
+            "why": "The annotated defect is an S1 money defect. A human must verify the fix."
+          }
+        ],
+        "alternative": {
+          "classification": "product_bug",
+          "why_not": "The test passing means the charged cost now matches the displayed price. The product diff fixes the money conversion rather than breaking it, and the log shows no wrong behaviour. The only failure is the unexpected pass of the test.fail annotation."
+        },
+        "known_defect": "DEF-01",
+        "next_action": {
+          "type": "fix_test",
+          "detail": "Remove the test.fail('DEF-01') annotation from TC-CHK-02 and close DEF-01 once a human has verified the getDouble() change in src/currency/src/server.cpp. The check should cover other currencies and amounts, since the change touches money.",
+          "owner_pod": "Catalogue & Pricing"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [],
+      "stable": true
+    }
+  ]
+}

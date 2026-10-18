@@ -1,0 +1,27 @@
+Attempt 1 (failed):
+Error: expect(locator).toBeVisible() failed
+
+Locator: getByTestId('recommendation-list')
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 10000ms
+  - waiting for getByTestId('recommendation-list')
+
+Page console: GET /api/recommendations?productIds=OLJCESPC7Z 500 (Internal Server Error)
+frontend | TypeError: Cannot read properties of undefined (reading 'map')
+frontend |     at handler (/app/pages/api/recommendations.ts:19:41)
+
+Attempt 2 (failed):
+Error: expect(locator).toBeVisible() failed
+
+Locator: getByTestId('recommendation-list')
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Page console: GET /api/recommendations?productIds=OLJCESPC7Z 500 (Internal Server Error)
+frontend | TypeError: Cannot read properties of undefined (reading 'map')
+frontend |     at handler (/app/pages/api/recommendations.ts:19:41)

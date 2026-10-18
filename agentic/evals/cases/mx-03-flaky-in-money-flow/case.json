@@ -1,0 +1,9 @@
+{
+  "id": "mx-03-flaky-in-money-flow",
+  "category": "tricky",
+  "cohort": "added-after-v2",
+  "provenance": "constructed: mixed signals. Passed on retry (flaky) but in the checkout money flow, which the guardrails treat as S1 territory. Expected answer is flaky_test with a human looking, not product_bug",
+  "testName": "ui/checkout.spec.ts > TC-CHK-01 happy path order (UI) > place an order and see the confirmation",
+  "expected": { "classification": "flaky_test", "next_action": ["quarantine", "fix_test"], "owner_pod": ["Storefront", "Quality Platform"], "needs_human": true },
+  "context": { "file": "ui/checkout.spec.ts", "project": "ui", "status": "flaky", "retries": 1, "attempts": [{ "status": "failed", "error": "expect(locator).toBeVisible() failed ... Timeout: 10000ms" }, { "status": "passed" }], "siblingFailures": [], "totalFailed": 0, "totalExecuted": 49, "unhealthyContainers": [], "testCaseId": "TC-CHK-01" }
+}
