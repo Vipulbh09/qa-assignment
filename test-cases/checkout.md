@@ -1,13 +1,6 @@
 # Flow 1: Checkout (place order)
 
-`POST /api/checkout` → `CheckoutService.PlaceOrder`, which calls cart → product-catalog → currency → shipping/quote → **payment (charge)** → shipping (ship) → cart (empty) → email.
-
-**Baseline** (every case assumes these, and lists only what it needs on top):
-1. **Stack ready, not just reachable:** `GET /api/products?currencyCode=EUR` returns products (`scripts/wait-for-demo.sh` checks this). USD works earlier than EUR.
-2. **All flagd flags `off`:** check `http://localhost:8080/feature`. Flags are global, so one left on makes unrelated cases fail.
-3. **A new shopper:** new `userId` (API) or empty `localStorage` (UI). The background `load-generator` creates carts the whole time.
-
-**Priority:** P1 = blocks release if failing; P2 = fix before next release; P3 = backlog. **Automation status:** `Automated` (fully scripted in `../automation`), `Partial` (scripted check plus a human judgement step), `Manual` (with the reason). Defects are in [`../bugs/`](../bugs/).
+**This flow tests** placing an order: the price charged must equal the price shown, in USD and in other currencies, and the order must behave sensibly when a service it depends on fails.
 
 ---
 
@@ -17,7 +10,7 @@
 |---|---|
 | Priority | P1 |
 | Automation status | Partial: API and UI automated (`api/checkout`, `ui/checkout`); step 6, reading the Jaeger trace, is manual |
-| Preconditions | Baseline. Jaeger reachable at `/jaeger` (step 6). |
+| Preconditions | Jaeger reachable at `/jaeger` (step 6). |
 
 | # | Step | Expected result |
 |---|---|---|
@@ -43,7 +36,7 @@
 |---|---|
 | Priority | **P1: release blocker** |
 | Automation status | Automated (API: compare catalogue price with order item cost for every product) |
-| Preconditions | Baseline. Currency **USD**. `GET /api/products` returns all 10 seeded products. |
+| Preconditions | Currency **USD**. `GET /api/products` returns all 10 seeded products. |
 | Status at `ac0443b` | **FAIL (DEF-01)** |
 
 | # | Step | Expected result |
@@ -69,7 +62,7 @@
 |---|---|
 | Priority | P1 |
 | Automation status | Automated (API) |
-| Preconditions | Baseline. `GET /api/currency` lists EUR and JPY. Rate table unchanged (EUR base, USD 1.1305, JPY 126.40): the expected values are computed from it. |
+| Preconditions | `GET /api/currency` lists EUR and JPY. Rate table unchanged (EUR base, USD 1.1305, JPY 126.40): the expected values are computed from it. |
 | Status at `ac0443b` | **FAIL** for products affected by DEF-01; pass for others |
 
 | # | Step | Expected result |
@@ -98,7 +91,7 @@
 |---|---|
 | Priority | P1 |
 | Automation status | Manual: shipping must fail *between* quote and ship within one request, which needs a fault hook in the product; reconciling "was the customer charged?" needs a human reading traces |
-| Preconditions | Baseline. Shell access to the Docker host to pause `shipping`. Jaeger reachable, to see whether the payment span succeeded. |
+| Preconditions | Shell access to the Docker host to pause `shipping`. Jaeger reachable, to see whether the payment span succeeded. |
 
 | # | Step | Expected result |
 |---|---|---|

@@ -1,13 +1,6 @@
 # Flow 2: Payment validation and decline handling
 
-`PaymentService.Charge` (`src/payment/charge.js`) validates the card (Luhn check, Visa/MasterCard only, not expired) and charges. A decline surfaces through checkout → frontend `/api/checkout` (HTTP 422, `PAYMENT_FAILED`) → UI.
-
-**Baseline** (every case assumes these, and lists only what it needs on top):
-1. **Stack ready, not just reachable:** `GET /api/products?currencyCode=EUR` returns products (`scripts/wait-for-demo.sh` checks this). USD works earlier than EUR.
-2. **All flagd flags `off`:** check `http://localhost:8080/feature`. Flags are global, so one left on makes unrelated cases fail.
-3. **A new shopper:** new `userId` (API) or empty `localStorage` (UI). The background `load-generator` creates carts the whole time.
-
-**Priority:** P1 = blocks release if failing; P2 = fix before next release; P3 = backlog. **Automation status:** `Automated` (fully scripted in `../automation`), `Partial` (scripted check plus a human judgement step), `Manual` (with the reason). Defects are in [`../bugs/`](../bugs/).
+**This flow tests** card validation, what the shopper sees when a payment is declined, and how checkout behaves when payment fails or is down.
 
 ---
 
@@ -17,7 +10,7 @@
 |---|---|
 | Priority | P1 |
 | Automation status | Automated (API, data-driven) |
-| Preconditions | Baseline (`paymentFailure` and `paymentUnreachable` off, otherwise declines are random). A new shopper with one item **per row**: a successful order empties the cart. |
+| Preconditions | `paymentFailure` and `paymentUnreachable` off, otherwise declines are random. A new shopper with one item **per row**: a successful order empties the cart. |
 
 | # | Card | Expiry | Expected result |
 |---|---|---|---|
@@ -45,7 +38,7 @@
 |---|---|
 | Priority | P1 |
 | Automation status | Partial: the absence of a message is automatable; whether the message is *clear* needs a human |
-| Preconditions | Baseline. **Not January** (needs a past month in the current year). One item in cart, on `/cart`. Browser console open, since the failure only shows there. |
+| Preconditions | **Not January** (needs a past month in the current year). One item in cart, on `/cart`. Browser console open, since the failure only shows there. |
 | Status at `ac0443b` | **FAIL (DEF-02)** |
 
 | # | Step | Expected result |
@@ -70,7 +63,7 @@
 |---|---|
 | Priority | P3 |
 | Automation status | Automated (UI) |
-| Preconditions | Baseline. **Not January.** One item in cart, on `/cart`. |
+| Preconditions | **Not January.** One item in cart, on `/cart`. |
 | Status at `ac0443b` | **FAIL (DEF-04)** |
 
 | # | Step | Expected result |
@@ -90,7 +83,7 @@
 |---|---|
 | Priority | P2 |
 | Automation status | Automated (API + flagd toggle) |
-| Preconditions | Baseline. Access to flagd (`/feature` UI or `/feature/api/*`). **Nothing else running against the stack**: the flags affect every shopper. |
+| Preconditions | Access to flagd (`/feature` UI or `/feature/api/*`). **Nothing else running against the stack**: the flags affect every shopper. |
 
 | # | Step | Expected result |
 |---|---|---|

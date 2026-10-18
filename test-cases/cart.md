@@ -1,13 +1,6 @@
 # Flow 3: Cart state and quantity integrity
 
-Cart service (.NET) stores carts in Valkey, keyed by `userId`. The `userId` is a UUID generated **in the browser** and kept in `localStorage` (`src/frontend/gateways/Session.gateway.ts`). Quantity changes in the UI are sent as **deltas** through `AddItem` (`src/frontend/providers/Cart.provider.tsx`).
-
-**Baseline** (every case assumes these, and lists only what it needs on top):
-1. **Stack ready, not just reachable:** `GET /api/products?currencyCode=EUR` returns products (`scripts/wait-for-demo.sh` checks this). USD works earlier than EUR.
-2. **All flagd flags `off`:** check `http://localhost:8080/feature`. Flags are global, so one left on makes unrelated cases fail.
-3. **A new shopper:** new `userId` (API) or empty `localStorage` (UI). The background `load-generator` creates carts the whole time.
-
-**Priority:** P1 = blocks release if failing; P2 = fix before next release; P3 = backlog. **Automation status:** `Automated` (fully scripted in `../automation`), `Partial` (scripted check plus a human judgement step), `Manual` (with the reason). Defects are in [`../bugs/`](../bugs/).
+**This flow tests** adding, changing and emptying the cart, rejection of invalid quantities and products, and that a shopper's cart is never shared with another shopper or lost.
 
 ---
 
@@ -17,7 +10,7 @@ Cart service (.NET) stores carts in Valkey, keyed by `userId`. The `userId` is a
 |---|---|
 | Priority | P1 |
 | Automation status | Automated (`api/cart`, `ui/cart`; DEF-10 kept as `fixme`) |
-| Preconditions | Baseline (empty `localStorage`: the cart is tied to the `session` key there). |
+| Preconditions | Empty `localStorage`: the cart is tied to the `session` key there. |
 
 | # | Step | Expected result |
 |---|---|---|
@@ -43,7 +36,7 @@ Cart service (.NET) stores carts in Valkey, keyed by `userId`. The `userId` is a
 |---|---|
 | Priority | P2 |
 | Automation status | Automated (API) |
-| Preconditions | Baseline. An API client (curl or Playwright): the UI can't send a negative or zero quantity. |
+| Preconditions | An API client (curl or Playwright): the UI can't send a negative or zero quantity. |
 | Status at `ac0443b` | **FAIL (DEF-03)** |
 
 | # | Step | Expected result |
@@ -69,7 +62,7 @@ Cart service (.NET) stores carts in Valkey, keyed by `userId`. The `userId` is a
 |---|---|
 | Priority | P2 |
 | Automation status | Partial: isolation is automatable; the privacy review of guessable IDs is a human judgement |
-| Preconditions | Baseline. Two **isolated** browser contexts (separate profiles or incognito), not two tabs: tabs share `localStorage` and so share the cart. Docker access to stop `valkey-cart` (step 4). |
+| Preconditions | Two **isolated** browser contexts (separate profiles or incognito), not two tabs: tabs share `localStorage` and so share the cart. Docker access to stop `valkey-cart` (step 4). |
 
 | # | Step | Expected result |
 |---|---|---|
