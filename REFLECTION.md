@@ -35,7 +35,7 @@ Three rules make it work: developers own unit tests; each QA is the named **back
 **Month 3: make quality a property of the pipeline, not of the QA team.**
 - **Contract tests** on `demo.proto` in every service's PR, so cross-language breakage fails before merge.
 - Unit tests in payment and currency owned by their developers, with QA reviewing the cases.
-- Nightly fault-injection and Locust performance baselines, with regressions filed automatically.
+- Nightly fault-injection scenarios, and an on-request Locust performance baseline (not scheduled, because of the load it generates), with regressions filed automatically.
 - **Synthetic checkout in production** (`synthetic_request=true`), so production pass rate is a real metric.
 - The **CI triage agent** from [`agentic/`](agentic/) in **shadow mode**: it classifies every failure, and humans confirm until its accuracy on our own history justifies trusting it.
 - Metrics from `test-strategy.md` §6 reported per pod, weekly, with trends.

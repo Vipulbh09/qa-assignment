@@ -10,7 +10,7 @@ Each section separates **what this repo does today** from **what I'd do with a t
 | Why not Cypress? | Upstream already uses it | Cypress is weaker at pure API testing, multi-tab and multi-context flows (TC-CART-03 needs two isolated shoppers), and parallelism without a paid service. I kept upstream's `data-cy` selectors so both suites share the same hooks. |
 | Fault injection | **flagd** (already in the stack) | Real failures through the real code paths, with no mocks to maintain. The demo ships the flags. |
 | Contract tests (next step) | **Pact**, or **buf breaking** on `demo.proto` | 8 languages talk gRPC. A proto change in Go can break a client in C++. `buf breaking` is a cheap first gate; consumer-driven Pact is the fuller answer. |
-| Performance (next step) | **Locust** (already in the stack as `load-generator`) | Reuse what exists; don't add a second load tool. |
+| Performance (next step) | **Locust** (already in the stack as `load-generator`) | Reuse what exists; don't add a second load tool. Run on request, not nightly: it generates a lot of load. |
 
 ## 2. Structure for a team of 4
 
@@ -40,8 +40,8 @@ automation/
 |---|---|---|---|
 | **Pull request** | Type check + POM check, then `@smoke` (5 tests) against a fresh Compose stack | + contract checks for changed protos; + specs tagged with the changed pod | Yes |
 | **Push to main** | Full suite: api → ui → faults (49 tests, ~35s of test time) | Same, plus automatic revert-or-fix-forward within 1 hour | Yes |
-| **Nightly (03:00)** | Full suite | + Locust baseline (p95 `PlaceOrder`, catalogue); + every flagd scenario | No; raises a ticket |
-| **Manual** | Full suite (`workflow_dispatch`) | Same | No |
+| **Nightly (03:00)** | Full suite | + every flagd scenario | No; raises a ticket |
+| **Manual** | Full suite (`workflow_dispatch`) | Same, plus an optional Locust baseline (p95 `PlaceOrder`, catalogue) when someone asks for it | No |
 | **Production** | n/a | Synthetic checkout every 5 min with `synthetic_request=true` baggage (payment skips the charge for these) | Pages on-call |
 
 **How failures surface:**
