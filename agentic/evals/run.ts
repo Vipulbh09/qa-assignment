@@ -4,7 +4,8 @@ import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { ClaudeCodeCli } from '../src/llm/ClaudeCodeCli.ts';
 import { PROMPT_VERSION } from '../src/prompt.ts';
-import { triage } from '../src/triage.ts';
+import { triage, triageByRule } from '../src/triage.ts';
+import { collectEvidence } from '../src/evidence.ts';
 import { CLASSIFICATIONS, type Classification, type RunContext, type TriageResult } from '../src/types.ts';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
@@ -17,6 +18,7 @@ const { values } = parseArgs({
     force: { type: 'boolean', default: false },
     runs: { type: 'string', default: '1' },
     out: { type: 'string' },
+    'no-rules': { type: 'boolean', default: false },
   },
 });
 
@@ -41,6 +43,8 @@ interface CaseMeta {
 }
 
 interface Run {
+  decidedBy?: 'rule' | 'model';
+  ruleId?: string;
   result: TriageResult;
   guardrailNotes: string[];
   durationMs: number;
@@ -62,6 +66,15 @@ for (const id of ids) {
   const diff = readFileSync(join(dir, 'diff.patch'), 'utf8');
   const runs: Run[] = [];
   let cached = 0;
+  // A rule decides without the model, so it is neither run repeatedly nor cached.
+  const ctx = { context: meta.context };
+  const ruled = values['no-rules'] ? null : triageByRule(collectEvidence({ testName: meta.testName, log, gitDiff: diff }, ctx), repoRoot);
+  if (ruled) {
+    const run: Run = { decidedBy: 'rule', ruleId: ruled.ruleId, result: ruled.result, guardrailNotes: ruled.guardrailNotes, durationMs: 0, costUsd: 0 };
+    console.log(`${id}: ${run.result.classification} by rule ${ruled.ruleId}`);
+    rows.push({ meta, runs: Array.from({ length: runsPer }, () => run), cached: 0 });
+    continue;
+  }
   for (let i = 0; i < runsPer; i++) {
     const cacheFile = join(cacheDir, `${id}.${PROMPT_VERSION}.${values.model}.${i}.json`);
     if (!values.force && existsSync(cacheFile)) {
@@ -70,8 +83,8 @@ for (const id of ids) {
       continue;
     }
     process.stdout.write(`running ${id} #${i + 1} ... `);
-    const o = await triage({ testName: meta.testName, log, gitDiff: diff }, llm, repoRoot, { context: meta.context });
-    const run: Run = { result: o.result, guardrailNotes: o.guardrailNotes, durationMs: o.durationMs, costUsd: o.costUsd };
+    const o = await triage({ testName: meta.testName, log, gitDiff: diff }, llm, repoRoot, { context: meta.context, rules: false });
+    const run: Run = { decidedBy: 'model', result: o.result, guardrailNotes: o.guardrailNotes, durationMs: o.durationMs, costUsd: o.costUsd };
     writeFileSync(cacheFile, JSON.stringify(run, null, 2));
     runs.push(run);
     console.log(`${run.result.classification} (${run.result.confidence}) in ${(run.durationMs / 1000).toFixed(1)}s`);
@@ -117,6 +130,8 @@ const cohorts = Object.fromEntries(
     return [k, { total: hs.length, correct: hs.filter(h => h.ok).length, real: hs.filter(h => h.meta.provenance.startsWith('real')).length, realCorrect: hs.filter(h => h.ok && h.meta.provenance.startsWith('real')).length }];
   }),
 );
+const ruleCases = head.filter(h => h.runs[0].decidedBy === 'rule');
+const rules = { decided: ruleCases.length, correct: ruleCases.filter(h => h.ok).length, modelCallsSaved: ruleCases.length * runsPer, ids: ruleCases.map(h => h.meta.id) };
 const unstable = rows.filter(r => new Set(r.runs.map(x => x.result.classification)).size > 1);
 const totalCost = rows.flatMap(r => r.runs).reduce((s, r) => s + (r.costUsd ?? 0), 0);
 const totalSec = rows.flatMap(r => r.runs).reduce((s, r) => s + r.durationMs, 0) / 1000;
@@ -135,6 +150,8 @@ const md = [
   `> With ${head.length} cases these numbers are directional, not statistically strong. Read the per-case table, not just the percentages. ` +
     `Cases marked *constructed* were written in Playwright's real error format but not captured from a live break.`,
   '',
+  `Decided by rule (no model call): ${rules.decided}/${head.length}, ${rules.correct} correct${rules.ids.length ? ` (${rules.ids.join(', ')})` : ''}.`,
+  '',
   `Next action ${actionOk.length}/${head.length} · owner pod ${ownerOk.length}/${head.length} · both ${bothOk.length}/${head.length} · false defect matches ${falseDefect.length} · escalation decision right ${escalationOk}/${head.length} (missed ${missedEscalation.length}, needless ${needlessEscalation.length}). These are reported, not part of the success bar.`,
   '',
   `**Accuracy: ${correct}/${head.length} (${pct(correct, head.length)})** · known-defect match ${defectOk.length}/${withDefect.length} · cost ${totalCost.toFixed(2)} USD-equivalent · ${totalSec.toFixed(0)}s model time`,
@@ -145,9 +162,9 @@ const md = [
   ...bar.map(b => `- ${b.pass ? 'PASS' : 'FAIL'}: ${b.name}`),
   '',
   '## Per case',
-  '| Case | Expected | Got | Confidence | Defect | Human? | OK | Source |',
-  '|---|---|---|---|---|---|---|---|',
-  ...head.map(h => `| ${h.meta.id} | ${h.meta.expected.classification} | ${h.got.classification} | ${h.got.confidence} | ${h.got.known_defect ?? '-'}${h.meta.expected.known_defect && h.got.known_defect !== h.meta.expected.known_defect ? ` (want ${h.meta.expected.known_defect})` : ''} | ${h.got.needs_human ? 'yes' : 'no'} | ${h.ok ? 'yes' : '**NO**'} | ${h.meta.provenance.split(':')[0]} |`),
+  '| Case | Expected | Got | Confidence | Defect | Human? | OK | Source | By |',
+  '|---|---|---|---|---|---|---|---|---|',
+  ...head.map(h => `| ${h.meta.id} | ${h.meta.expected.classification} | ${h.got.classification} | ${h.got.confidence} | ${h.got.known_defect ?? '-'}${h.meta.expected.known_defect && h.got.known_defect !== h.meta.expected.known_defect ? ` (want ${h.meta.expected.known_defect})` : ''} | ${h.got.needs_human ? 'yes' : 'no'} | ${h.ok ? 'yes' : '**NO**'} | ${h.meta.provenance.split(':')[0]} | ${h.runs[0].decidedBy ?? 'model'} |`),
   '',
   '## Action, owner and escalation',
   '| Case | Action (want / got) | Owner (want / got) | Defect named | Escalated (want / got) |',
@@ -191,6 +208,7 @@ const report = {
   knownDefect: { matched: defectOk.length, total: withDefect.length },
   falseFlaky: falseFlaky.length,
   cohorts,
+  rules,
   nextAction: { action: actionOk.length, owner: ownerOk.length, both: bothOk.length },
   falseDefect: falseDefect.map(h => h.meta.id),
   escalation: { right: escalationOk, missed: missedEscalation.map(h => h.meta.id), needless: needlessEscalation.map(h => h.meta.id) },
@@ -206,6 +224,7 @@ const report = {
     category: h.meta.category,
     provenance: h.meta.provenance.split(':')[0],
     cohort: cohortOf(h),
+    decidedBy: h.runs[0].decidedBy ?? 'model',
     testName: h.meta.testName,
     expected: h.meta.expected,
     ok: h.ok,

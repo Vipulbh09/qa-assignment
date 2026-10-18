@@ -1,52 +1,55 @@
 # Eval results
 
-Prompt **v2.1** · model **sonnet** · 29 cases × 1 run(s) · 2026-10-18
+Prompt **v2.1** · model **sonnet** · 30 cases × 1 run(s) · 2026-10-18
 
-> With 29 cases these numbers are directional, not statistically strong. Read the per-case table, not just the percentages. Cases marked *constructed* were written in Playwright's real error format but not captured from a live break.
+> With 30 cases these numbers are directional, not statistically strong. Read the per-case table, not just the percentages. Cases marked *constructed* were written in Playwright's real error format but not captured from a live break.
 
-Next action 26/29 · owner pod 23/29 · both 22/29 · false defect matches 1 · escalation decision right 17/29 (missed 0, needless 12). These are reported, not part of the success bar.
+Decided by rule (no model call): 2/30, 2 correct (env-01-504-wall, env-04-paused-catalog-504).
 
-**Accuracy: 28/29 (97%)** · known-defect match 12/13 · cost 0.72 USD-equivalent · 299s model time
+Next action 27/30 · owner pod 24/30 · both 23/30 · false defect matches 1 · escalation decision right 18/30 (missed 0, needless 12). These are reported, not part of the success bar.
 
-Cases written before the v2 prompt (tuned on): 14/14 · added after v2 was frozen (not tuned on): 14/15, of which real captures 9/10
+**Accuracy: 29/30 (97%)** · known-defect match 12/13 · cost 0.66 USD-equivalent · 286s model time
+
+Cases written before the v2 prompt (tuned on): 14/14 · added after v2 was frozen (not tuned on): 15/16, of which real captures 9/10
 
 ## Success bar
-- PASS: at least 25/29 correct
+- PASS: at least 26/30 correct
 - PASS: every high-confidence answer is correct
 - PASS: no S1 product bug labelled flaky
 
 ## Per case
-| Case | Expected | Got | Confidence | Defect | Human? | OK | Source |
-|---|---|---|---|---|---|---|---|
-| env-01-504-wall | environment_issue | environment_issue | high | - | no | yes | constructed |
-| env-02-stack-down | environment_issue | environment_issue | medium | - | no | yes | constructed |
-| env-03-service-unavailable | environment_issue | environment_issue | high | - | no | yes | constructed |
-| env-04-paused-catalog-504 | environment_issue | environment_issue | medium | - | no | yes | real |
-| env-05-currency-down-500 | environment_issue | environment_issue | medium | - | yes | yes | real |
-| fl-01-flag-propagation | flaky_test | flaky_test | medium | - | yes | yes | constructed |
-| fl-02-ui-timeout | flaky_test | flaky_test | low | - | yes | yes | constructed |
-| fl-03-shared-flag-race | flaky_test | flaky_test | medium | - | yes | yes | constructed |
-| mx-01-fixed-marker-masks-outage | environment_issue | test_gap | medium | DEF-05 | yes | **NO** | real |
-| mx-02-wall-but-own-price-mismatch | product_bug | product_bug | medium | DEF-01 | yes | yes | constructed |
-| mx-03-flaky-in-money-flow | flaky_test | flaky_test | low | - | yes | yes | constructed |
-| mx-04-unhealthy-noise-but-renamed-hook | test_gap | test_gap | medium | - | no | yes | constructed |
-| pb-01-price-shift | product_bug | product_bug | high | DEF-01 | yes | yes | real |
-| pb-02-free-goods | product_bug | product_bug | medium | DEF-05 | yes | yes | real |
-| pb-03-cart-poisoned | product_bug | product_bug | high | DEF-07 | no | yes | real |
-| pb-04-no-decline-message | product_bug | product_bug | medium | DEF-02 | yes | yes | real |
-| pb-05-negative-quantity | product_bug | product_bug | medium | DEF-03 | no | yes | real |
-| pb-06-cvv-not-validated | product_bug | product_bug | high | DEF-06 | yes | yes | real |
-| pb-07-past-expiry-months | product_bug | product_bug | medium | DEF-04 | no | yes | real |
-| pb-08-nano-drift | product_bug | product_bug | medium | - (want DEF-08) | yes | yes | real |
-| pb-09-fractional-yen | product_bug | product_bug | high | DEF-09 | yes | yes | real |
-| pb-10-currency-list-polluted | product_bug | product_bug | high | DEF-11 | no | yes | real |
-| pb-11-novel-total-omits-shipping | product_bug | product_bug | high | - | yes | yes | constructed |
-| pb-12-novel-recommendations-crash | product_bug | product_bug | high | - | no | yes | constructed |
-| tg-01-renamed-hook | test_gap | test_gap | high | - | no | yes | constructed |
-| tg-02-stale-rate | test_gap | test_gap | medium | - | yes | yes | constructed |
-| tg-03-hardcoded-price | test_gap | test_gap | medium | - | yes | yes | constructed |
-| tr-01-intermittent-product-bug | product_bug | product_bug | high | DEF-10 | no | yes | constructed |
-| tr-02-fixed-known-defect | test_gap | test_gap | high | DEF-01 | yes | yes | constructed |
+| Case | Expected | Got | Confidence | Defect | Human? | OK | Source | By |
+|---|---|---|---|---|---|---|---|---|
+| env-01-504-wall | environment_issue | environment_issue | high | - | no | yes | constructed | rule |
+| env-02-stack-down | environment_issue | environment_issue | medium | - | no | yes | constructed | model |
+| env-03-service-unavailable | environment_issue | environment_issue | high | - | no | yes | constructed | model |
+| env-04-paused-catalog-504 | environment_issue | environment_issue | high | - | no | yes | real | rule |
+| env-05-currency-down-500 | environment_issue | environment_issue | medium | - | yes | yes | real | model |
+| fl-01-flag-propagation | flaky_test | flaky_test | medium | - | yes | yes | constructed | model |
+| fl-02-ui-timeout | flaky_test | flaky_test | low | - | yes | yes | constructed | model |
+| fl-03-shared-flag-race | flaky_test | flaky_test | medium | - | yes | yes | constructed | model |
+| mx-01-fixed-marker-masks-outage | environment_issue | test_gap | medium | DEF-05 | yes | **NO** | real | model |
+| mx-02-wall-but-own-price-mismatch | product_bug | product_bug | medium | DEF-01 | yes | yes | constructed | model |
+| mx-03-flaky-in-money-flow | flaky_test | flaky_test | low | - | yes | yes | constructed | model |
+| mx-04-unhealthy-noise-but-renamed-hook | test_gap | test_gap | medium | - | no | yes | constructed | model |
+| pb-01-price-shift | product_bug | product_bug | high | DEF-01 | yes | yes | real | model |
+| pb-02-free-goods | product_bug | product_bug | medium | DEF-05 | yes | yes | real | model |
+| pb-03-cart-poisoned | product_bug | product_bug | high | DEF-07 | no | yes | real | model |
+| pb-04-no-decline-message | product_bug | product_bug | medium | DEF-02 | yes | yes | real | model |
+| pb-05-negative-quantity | product_bug | product_bug | medium | DEF-03 | no | yes | real | model |
+| pb-06-cvv-not-validated | product_bug | product_bug | high | DEF-06 | yes | yes | real | model |
+| pb-07-past-expiry-months | product_bug | product_bug | medium | DEF-04 | no | yes | real | model |
+| pb-08-nano-drift | product_bug | product_bug | medium | - (want DEF-08) | yes | yes | real | model |
+| pb-09-fractional-yen | product_bug | product_bug | high | DEF-09 | yes | yes | real | model |
+| pb-10-currency-list-polluted | product_bug | product_bug | high | DEF-11 | no | yes | real | model |
+| pb-11-novel-total-omits-shipping | product_bug | product_bug | high | - | yes | yes | constructed | model |
+| pb-12-novel-recommendations-crash | product_bug | product_bug | high | - | no | yes | constructed | model |
+| pb-13-slow-checkout-504 | product_bug | product_bug | high | - | yes | yes | constructed | model |
+| tg-01-renamed-hook | test_gap | test_gap | high | - | no | yes | constructed | model |
+| tg-02-stale-rate | test_gap | test_gap | medium | - | yes | yes | constructed | model |
+| tg-03-hardcoded-price | test_gap | test_gap | medium | - | yes | yes | constructed | model |
+| tr-01-intermittent-product-bug | product_bug | product_bug | high | DEF-10 | no | yes | constructed | model |
+| tr-02-fixed-known-defect | test_gap | test_gap | high | DEF-01 | yes | yes | constructed | model |
 
 ## Action, owner and escalation
 | Case | Action (want / got) | Owner (want / got) | Defect named | Escalated (want / got) |
@@ -75,6 +78,7 @@ Cases written before the v2 prompt (tuned on): 14/14 · added after v2 was froze
 | pb-10-currency-list-polluted | file_bug / file_bug  | Catalogue & Pricing / Catalogue & Pricing  | DEF-11 | no / no  |
 | pb-11-novel-total-omits-shipping | file_bug / file_bug  | Catalogue & Pricing / Checkout & Payments **NO** | - | yes / yes  |
 | pb-12-novel-recommendations-crash | file_bug / file_bug  | Storefront / Storefront  | - | no / no  |
+| pb-13-slow-checkout-504 | file_bug / file_bug  | Checkout & Payments / Checkout & Payments  | - | yes / yes  |
 | tg-01-renamed-hook | fix_test / fix_test  | Storefront / Storefront  | - | no / no  |
 | tg-02-stale-rate | fix_test / fix_test  | Catalogue & Pricing or Quality Platform / Catalogue & Pricing  | - | no / yes (needless) |
 | tg-03-hardcoded-price | fix_test / fix_test  | Catalogue & Pricing or Checkout & Payments or Quality Platform / Checkout & Payments  | - | no / yes (needless) |
@@ -84,7 +88,7 @@ Cases written before the v2 prompt (tuned on): 14/14 · added after v2 was froze
 ## Per class
 | Class | Cases | Precision | Recall |
 |---|---|---|---|
-| product_bug | 14 | 100% | 100% |
+| product_bug | 15 | 100% | 100% |
 | flaky_test | 4 | 100% | 100% |
 | environment_issue | 6 | 100% | 83% |
 | test_gap | 5 | 83% | 100% |
@@ -92,7 +96,7 @@ Cases written before the v2 prompt (tuned on): 14/14 · added after v2 was froze
 ## Confusion matrix (rows = expected, columns = got)
 | | product_bug | flaky_test | environment_issue | test_gap |
 |---|---|---|---|---|
-| product_bug | 14 | 0 | 0 | 0 |
+| product_bug | 15 | 0 | 0 | 0 |
 | flaky_test | 0 | 4 | 0 | 0 |
 | environment_issue | 0 | 0 | 5 | 1 |
 | test_gap | 0 | 0 | 0 | 5 |
@@ -100,8 +104,8 @@ Cases written before the v2 prompt (tuned on): 14/14 · added after v2 was froze
 ## Confidence calibration
 | Confidence | Answers | Correct |
 |---|---|---|
-| high | 12 | 12 |
-| medium | 15 | 14 |
+| high | 14 | 14 |
+| medium | 14 | 13 |
 | low | 2 | 2 |
 
 False "flaky" on real product bugs: **0** (the costly error: it hides bugs).

@@ -1,0 +1,26 @@
+{
+  "id": "pb-13-slow-checkout-504",
+  "category": "product_bug",
+  "cohort": "added-after-v2",
+  "provenance": "constructed: hard negative for the 504 rule. Every checkout test times out with a 504, which looks like an outage, but the diff adds a blocking sleep to the checkout service itself and nothing else is failing",
+  "testName": "api/checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Solar Filter: order cost equals catalogue price",
+  "expected": { "classification": "product_bug", "next_action": ["file_bug"], "owner_pod": ["Checkout & Payments"], "needs_human": true },
+  "context": {
+    "file": "api/checkout.spec.ts",
+    "project": "api",
+    "status": "unexpected",
+    "retries": 1,
+    "siblingFailures": [
+      "TC-CHK-01 happy path order (API) > USD order: totals, IDs and cart emptied @smoke",
+      "TC-CHK-02 displayed price equals charged price > Roof Binoculars: order cost equals catalogue price",
+      "TC-CHK-02 displayed price equals charged price > The Comet Book: order cost equals catalogue price",
+      "TC-CHK-03 non-USD currency > EUR order is costed in EUR at listed prices",
+      "TC-CHK-03 non-USD currency > order in an unsupported currency is refused"
+    ],
+    "gatewayTimeoutSiblings": 5,
+    "totalFailed": 6,
+    "totalExecuted": 49,
+    "unhealthyContainers": [],
+    "testCaseId": "TC-CHK-02"
+  }
+}

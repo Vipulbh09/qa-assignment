@@ -1,13 +1,13 @@
 {
   "promptVersion": "v2.1",
   "model": "sonnet",
-  "ranAt": "2026-10-18T19:04:35.533Z",
+  "ranAt": "2026-10-18T19:46:11.671Z",
   "source": "local",
   "runUrl": null,
   "runsPerCase": 1,
-  "correct": 28,
-  "total": 29,
-  "accuracy": 0.9655172413793104,
+  "correct": 29,
+  "total": 30,
+  "accuracy": 0.9666666666666667,
   "knownDefect": {
     "matched": 12,
     "total": 13
@@ -21,22 +21,31 @@
       "realCorrect": 3
     },
     "heldOut": {
-      "total": 15,
-      "correct": 14,
+      "total": 16,
+      "correct": 15,
       "real": 10,
       "realCorrect": 9
     }
   },
+  "rules": {
+    "decided": 2,
+    "correct": 2,
+    "modelCallsSaved": 2,
+    "ids": [
+      "env-01-504-wall",
+      "env-04-paused-catalog-504"
+    ]
+  },
   "nextAction": {
-    "action": 26,
-    "owner": 23,
-    "both": 22
+    "action": 27,
+    "owner": 24,
+    "both": 23
   },
   "falseDefect": [
     "mx-01-fixed-marker-masks-outage"
   ],
   "escalation": {
-    "right": 17,
+    "right": 18,
     "missed": [],
     "needless": [
       "env-05-currency-down-500",
@@ -53,11 +62,11 @@
       "tr-02-fixed-known-defect"
     ]
   },
-  "costUsd": 0.7179807999999998,
-  "modelSeconds": 299.24,
+  "costUsd": 0.6605753999999998,
+  "modelSeconds": 285.86,
   "bar": [
     {
-      "name": "at least 25/29 correct",
+      "name": "at least 26/30 correct",
       "pass": true
     },
     {
@@ -74,7 +83,7 @@
       "c": "product_bug",
       "precision": "100%",
       "recall": "100%",
-      "actual": 14
+      "actual": 15
     },
     {
       "c": "flaky_test",
@@ -97,7 +106,7 @@
   ],
   "matrix": {
     "product_bug": {
-      "product_bug": 14,
+      "product_bug": 15,
       "flaky_test": 0,
       "environment_issue": 0,
       "test_gap": 0
@@ -124,13 +133,13 @@
   "calibration": [
     {
       "l": "high",
-      "n": 12,
-      "ok": 12
+      "n": 14,
+      "ok": 14
     },
     {
       "l": "medium",
-      "n": 15,
-      "ok": 14
+      "n": 14,
+      "ok": 13
     },
     {
       "l": "low",
@@ -145,6 +154,7 @@
       "category": "environment_issue",
       "provenance": "constructed",
       "cohort": "tuned",
+      "decidedBy": "rule",
       "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > EUR price for a 1-9 cent product (Red Flashlight)",
       "expected": {
         "classification": "environment_issue",
@@ -164,37 +174,27 @@
       "got": {
         "classification": "environment_issue",
         "confidence": "high",
-        "summary": "TC-CHK-03 got a 504 Gateway Timeout from GET /api/products?currencyCode=EUR. It is one of 7 failures in the run, and 6 of those are also api 504s. The checkout and product-catalog containers are unhealthy, so the stack is broken and this is not a product or test defect.",
+        "summary": "This test got a 504 Gateway Timeout on every attempt, and 6 other test(s) in the same run also failed with a 504. A wall of gateway timeouts points to the stack, not to this test or the product.",
         "evidence": [
           {
             "source": "log",
-            "quote": "GET /api/products?currencyCode=EUR -> 504 Gateway Timeout (upstream request timeout)",
-            "why": "The failure is an upstream gateway timeout, not a wrong price or value. The test's assertions never reached the business logic."
+            "quote": "Received: 504",
+            "why": "The failure is the gateway timing out, not a wrong value or a failed assertion on business data."
           },
           {
             "source": "signal",
-            "quote": "checkout, product-catalog (unhealthy)",
-            "why": "The containers serving this flow are unhealthy, so the run's results can't be trusted."
-          },
-          {
-            "source": "signal",
-            "quote": "api tests failing with 504 # 1",
-            "why": "The sibling api tests fail with the same 504 (six of them are listed), which points to a stack-wide problem."
-          },
-          {
-            "source": "diff",
-            "quote": "-# QA Assignment\n+# QA Assignment: OpenTelemetry Astronomy Shop",
-            "why": "The diff only changes the README, so no product or test code could have caused this failure."
+            "quote": "504",
+            "why": "6 other failed tests also ended in a 504 in this run."
           }
         ],
         "alternative": {
-          "classification": "flaky_test",
-          "why_not": "The failure is not timing, shared state or a probabilistic assertion in the test. The 504s span many api tests alongside unhealthy containers. The failed retry also shows the problem persisted, so the stack is at fault."
+          "classification": "product_bug",
+          "why_not": "A product bug fails one flow with a wrong value or a specific error. It does not return the same gateway timeout across unrelated tests, and the diff touches no service on the request path."
         },
         "known_defect": null,
         "next_action": {
           "type": "restart_env",
-          "detail": "Restart or repair the unhealthy checkout and product-catalog containers, confirm the stack is healthy, then rerun the api project. Re-evaluate TC-CHK-03 (EUR price for a 1-9 cent product) once it gets a real 200 response. This test is money-related, so check its result on the healthy rerun.",
+          "detail": "Check `docker ps -a` for paused, exited or unhealthy containers, restart the stack and re-run. Do not file a bug from this run.",
           "owner_pod": "Quality Platform"
         },
         "needs_human": false
@@ -207,6 +207,7 @@
       "category": "environment_issue",
       "provenance": "constructed",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "cart.spec.ts > TC-CART-01 cart operations (API) > adding the same product twice merges the line",
       "expected": {
         "classification": "environment_issue",
@@ -261,6 +262,7 @@
       "category": "environment_issue",
       "provenance": "constructed",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "payment.spec.ts > TC-PAY-01 card validation matrix > Mastercard is accepted",
       "expected": {
         "classification": "environment_issue",
@@ -323,6 +325,7 @@
       "category": "environment_issue",
       "provenance": "real",
       "cohort": "heldOut",
+      "decidedBy": "rule",
       "testName": "api/checkout.spec.ts > TC-CHK-02 displayed price equals charged price > National Park Foundation Explorascope: order cost equals catalogue price",
       "expected": {
         "classification": "environment_issue",
@@ -341,35 +344,33 @@
       "escalationOk": true,
       "got": {
         "classification": "environment_issue",
-        "confidence": "medium",
-        "summary": "TC-CHK-02 got HTTP 504 instead of 200, and 13 other checkout API tests failed in the same run (14 of 19). That points to a gateway or stack problem, not a checkout defect. The only diff is a TODO comment in AdService, which is not on the checkout flow.",
+        "confidence": "high",
+        "summary": "This test got a 504 Gateway Timeout on every attempt, and 10 other test(s) in the same run also failed with a 504. A wall of gateway timeouts points to the stack, not to this test or the product.",
         "evidence": [
           {
             "source": "log",
-            "quote": "Expected: 200\nReceived: 504",
-            "why": "A gateway timeout status, not wrong business data or a wrong value."
+            "quote": "Received: 504",
+            "why": "The failure is the gateway timing out, not a wrong value or a failed assertion on business data."
           },
           {
-            "source": "diff",
-            "quote": "+      // TODO: cache ads per context key",
-            "why": "The only product change is a comment in the ad service. It has no behaviour change and is not on the checkout flow."
+            "source": "signal",
+            "quote": "504",
+            "why": "10 other failed tests also ended in a 504 in this run."
           }
         ],
         "alternative": {
           "classification": "product_bug",
-          "why_not": "The diff is a comment-only change in AdService, which is unrelated to checkout. The failures are 504s across many unrelated tests, not wrong behaviour or wrong values."
+          "why_not": "A product bug fails one flow with a wrong value or a specific error. It does not return the same gateway timeout across unrelated tests, and the diff touches no service on the request path."
         },
         "known_defect": null,
         "next_action": {
           "type": "restart_env",
-          "detail": "Check gateway, frontend and checkout service logs and CPU load, then restart the stack and rerun the api project. unhealthyContainers is empty, so the root cause is not confirmed. If the 504s persist on a healthy stack, escalate. Checkout is S1 territory, so verify the rerun results.",
+          "detail": "Check `docker ps -a` for paused, exited or unhealthy containers, restart the stack and re-run. Do not file a bug from this run.",
           "owner_pod": "Quality Platform"
         },
         "needs_human": false
       },
-      "guardrailNotes": [
-        "1 evidence quote(s) are not in the input and were removed"
-      ],
+      "guardrailNotes": [],
       "stable": true
     },
     {
@@ -377,6 +378,7 @@
       "category": "environment_issue",
       "provenance": "real",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "api/checkout.spec.ts > TC-CHK-01 happy path order (API) > USD order: totals, IDs and cart emptied @smoke",
       "expected": {
         "classification": "environment_issue",
@@ -436,6 +438,7 @@
       "category": "flaky_test",
       "provenance": "constructed",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "payment-failure.spec.ts > TC-PAY-04 injected payment failure > most orders decline when paymentFailure is on",
       "expected": {
         "classification": "flaky_test",
@@ -501,6 +504,7 @@
       "category": "flaky_test",
       "provenance": "constructed",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > Empty Cart clears the badge",
       "expected": {
         "classification": "flaky_test",
@@ -558,6 +562,7 @@
       "category": "flaky_test",
       "provenance": "constructed",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "checkout.spec.ts > TC-CHK-01 happy path order (API) > order succeeds in USD",
       "expected": {
         "classification": "flaky_test",
@@ -621,6 +626,7 @@
       "category": "tricky",
       "provenance": "real",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "api/checkout.spec.ts > TC-CHK-03 non-USD currency > unsupported currency code is rejected, not priced at zero",
       "expected": {
         "classification": "environment_issue",
@@ -680,6 +686,7 @@
       "category": "tricky",
       "provenance": "constructed",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "api/checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
       "expected": {
         "classification": "product_bug",
@@ -740,6 +747,7 @@
       "category": "tricky",
       "provenance": "constructed",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "ui/checkout.spec.ts > TC-CHK-01 happy path order (UI) > place an order and see the confirmation",
       "expected": {
         "classification": "flaky_test",
@@ -796,6 +804,7 @@
       "category": "tricky",
       "provenance": "constructed",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "ui/cart.spec.ts > TC-CART-01 cart lifecycle (UI) > Empty Cart clears the badge",
       "expected": {
         "classification": "test_gap",
@@ -859,6 +868,7 @@
       "category": "product_bug",
       "provenance": "real",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
       "expected": {
         "classification": "product_bug",
@@ -919,6 +929,7 @@
       "category": "product_bug",
       "provenance": "real",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > unsupported currency code is rejected, not priced at zero",
       "expected": {
         "classification": "product_bug",
@@ -974,6 +985,7 @@
       "category": "product_bug",
       "provenance": "real",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "cart.spec.ts > TC-CART-02 invalid quantities and products are rejected > unknown product ID is rejected and does not break the cart",
       "expected": {
         "classification": "product_bug",
@@ -1037,6 +1049,7 @@
       "category": "product_bug",
       "provenance": "real",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "ui/payment.spec.ts > TC-PAY-02 declined payment feedback > shopper sees a message when the card is declined",
       "expected": {
         "classification": "product_bug",
@@ -1097,6 +1110,7 @@
       "category": "product_bug",
       "provenance": "real",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "api/cart.spec.ts > TC-CART-02 invalid quantities and products are rejected > negative quantity on an empty cart",
       "expected": {
         "classification": "product_bug",
@@ -1155,6 +1169,7 @@
       "category": "product_bug",
       "provenance": "real",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "api/payment.spec.ts > TC-PAY-01 card validation matrix > CVV 0 is rejected",
       "expected": {
         "classification": "product_bug",
@@ -1215,6 +1230,7 @@
       "category": "product_bug",
       "provenance": "real",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "ui/payment.spec.ts > TC-PAY-03 expiry selector > past months of the current year cannot be selected",
       "expected": {
         "classification": "product_bug",
@@ -1278,6 +1294,7 @@
       "category": "product_bug",
       "provenance": "real",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "api/checkout.spec.ts > TC-CHK-02 displayed price equals charged price > order cost is exact to the nano (no float round-trip)",
       "expected": {
         "classification": "product_bug",
@@ -1336,6 +1353,7 @@
       "category": "product_bug",
       "provenance": "real",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "api/checkout.spec.ts > TC-CHK-03 non-USD currency > JPY prices have no fractional yen",
       "expected": {
         "classification": "product_bug",
@@ -1399,6 +1417,7 @@
       "category": "product_bug",
       "provenance": "real",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "api/checkout.spec.ts > TC-CHK-03 non-USD currency > an unknown currency code is not added to the supported list",
       "expected": {
         "classification": "product_bug",
@@ -1462,6 +1481,7 @@
       "category": "product_bug",
       "provenance": "constructed",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "api/checkout.spec.ts > TC-CHK-01 happy path order (API) > USD order: totals, IDs and cart emptied @smoke",
       "expected": {
         "classification": "product_bug",
@@ -1524,6 +1544,7 @@
       "category": "product_bug",
       "provenance": "constructed",
       "cohort": "heldOut",
+      "decidedBy": "model",
       "testName": "ui/checkout.spec.ts > TC-CHK-01 happy path order (UI) > product page shows recommendations",
       "expected": {
         "classification": "product_bug",
@@ -1582,10 +1603,66 @@
       "stable": true
     },
     {
+      "id": "pb-13-slow-checkout-504",
+      "category": "product_bug",
+      "provenance": "constructed",
+      "cohort": "heldOut",
+      "decidedBy": "model",
+      "testName": "api/checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Solar Filter: order cost equals catalogue price",
+      "expected": {
+        "classification": "product_bug",
+        "next_action": [
+          "file_bug"
+        ],
+        "owner_pod": [
+          "Checkout & Payments"
+        ],
+        "needs_human": true
+      },
+      "ok": true,
+      "actionOk": true,
+      "ownerOk": true,
+      "falseDefect": false,
+      "escalationOk": true,
+      "got": {
+        "classification": "product_bug",
+        "confidence": "high",
+        "summary": "PlaceOrder in the checkout service now has a 20-second time.Sleep, so every order-placing call hits the gateway timeout (504). The 504s look like an environment wall, but all failures are on checkout and no container is unhealthy, so the diff is the cause.",
+        "evidence": [
+          {
+            "source": "diff",
+            "quote": "+\ttime.Sleep(20 * time.Second)",
+            "why": "This adds a fixed 20s delay at the start of PlaceOrder, on the failing flow. It is enough to exceed the gateway timeout."
+          },
+          {
+            "source": "log",
+            "quote": "Received: 504",
+            "why": "The order request returned a gateway timeout on both attempts. This is consistent with a slow backend, not a wrong locator."
+          }
+        ],
+        "alternative": {
+          "classification": "environment_issue",
+          "why_not": "The wall-of-504 signal fired, but the 504s are confined to order placement. Unrelated tests pass, no container is unhealthy, and the diff adds a 20s sleep in PlaceOrder that explains the timeouts."
+        },
+        "known_defect": null,
+        "next_action": {
+          "type": "file_bug",
+          "detail": "Revert or remove the time.Sleep(20 * time.Second) added in PlaceOrder in src/checkout/main.go. If a warm-up is really needed, do it at startup or with a readiness check, not on every order. Then rerun the checkout API specs (TC-CHK-01, TC-CHK-02 and TC-CHK-03).",
+          "owner_pod": "Checkout & Payments"
+        },
+        "needs_human": true
+      },
+      "guardrailNotes": [
+        "2 evidence quote(s) are not in the input and were removed"
+      ],
+      "stable": true
+    },
+    {
       "id": "tg-01-renamed-hook",
       "category": "test_gap",
       "provenance": "constructed",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > quantity can be changed on the cart page",
       "expected": {
         "classification": "test_gap",
@@ -1648,6 +1725,7 @@
       "category": "test_gap",
       "provenance": "constructed",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "checkout.spec.ts > TC-CHK-03 non-USD currency > EUR price for The Comet Book",
       "expected": {
         "classification": "test_gap",
@@ -1708,6 +1786,7 @@
       "category": "test_gap",
       "provenance": "constructed",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "checkout.spec.ts > TC-CHK-01 happy path order (UI) > cart totals before placing the order",
       "expected": {
         "classification": "test_gap",
@@ -1767,6 +1846,7 @@
       "category": "tricky",
       "provenance": "constructed",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "cart.spec.ts > TC-CART-01 cart lifecycle (UI) > cart page shows the merged quantity without a reload",
       "expected": {
         "classification": "product_bug",
@@ -1830,6 +1910,7 @@
       "category": "tricky",
       "provenance": "constructed",
       "cohort": "tuned",
+      "decidedBy": "model",
       "testName": "checkout.spec.ts > TC-CHK-02 displayed price equals charged price > Red Flashlight: order cost equals catalogue price",
       "expected": {
         "classification": "test_gap",

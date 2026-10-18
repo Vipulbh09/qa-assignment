@@ -61,8 +61,13 @@ function triageSection() {
   const sub =
     tr.mode === 'signals-only'
       ? 'The model was not available in this build (no <code>CLAUDE_CODE_OAUTH_TOKEN</code>). Only the rule-based signals are shown, not a classification.'
-      : `Shadow mode: these are suggestions for a human to confirm. Nothing was filed, quarantined or rerun. ${tr.skipped ? `${tr.skipped} more failure(s) were not triaged (cap of ${tr.triaged}).` : ''}`;
+      : `Shadow mode: these are suggestions for a human to confirm. Nothing was filed, quarantined or rerun. ${tr.skipped ? `${tr.skipped} more failure(s) were not triaged (model-call cap reached).` : ''}`;
+  const ruled = tr.entries.filter(e => e.outcome?.decidedBy === 'rule');
+  const ruledHtml = ruled.length
+    ? `<details class="case"><summary><span class="tname">${ruled.length} failure(s) decided by a rule, no model call</span><span class="sum"><b>${esc(label(ruled[0].outcome.result.classification))}</b> · rule <span class="mono">${esc(ruled[0].outcome.ruleId)}</span></span></summary><div class="case-body"><p class="small">${esc(ruled[0].outcome.result.summary.replace(/^.*? and /, ''))}</p>${resultBody(ruled[0].outcome.result, ruled[0].outcome.guardrailNotes)}<p class="small muted">Applies to:</p><ul class="small">${ruled.map(e => `<li>${esc(e.testName)}</li>`).join('')}</ul></div></details>`
+    : '';
   const items = tr.entries
+    .filter(e => e.outcome?.decidedBy !== 'rule')
     .map(e => {
       const o = e.outcome;
       const head = o
@@ -78,14 +83,14 @@ function triageSection() {
       return `<details class="case" open><summary><span class="tname">${esc(e.testName)}</span><span class="sum">${esc(e.status === 'flaky' ? 'passed on retry' : 'failed')} · ${head}</span></summary><div class="case-body">${body}</div></details>`;
     })
     .join('');
-  return `<section class="card"><h2>Failures in this run</h2><p class="card-sub">${sub}</p>${items}</section>`;
+  return `<section class="card"><h2>Failures in this run</h2><p class="card-sub">${sub}</p>${ruledHtml}${items}</section>`;
 }
 
 // ---------- eval ----------
 const barRows = ev.bar.map(b => `<tr><td>${esc(b.name)}</td><td>${badge(b.pass)}</td></tr>`).join('');
 const caseRows = ev.cases
   .map(
-    c => `<details class="case"><summary><span class="tname"><span class="mono">${esc(c.id)}</span> ${c.provenance === 'real' ? '' : '<span class="tag">constructed</span>'}${c.cohort === 'heldOut' ? ' <span class="tag">not tuned on</span>' : ''}</span>
+    c => `<details class="case"><summary><span class="tname"><span class="mono">${esc(c.id)}</span> ${c.provenance === 'real' ? '' : '<span class="tag">constructed</span>'}${c.cohort === 'heldOut' ? ' <span class="tag">not tuned on</span>' : ''}${c.decidedBy === 'rule' ? ' <span class="tag">rule</span>' : ''}</span>
   <span class="sum">expected <b>${esc(label(c.expected.classification))}</b> · got <b>${esc(label(c.got.classification))}</b> ${conf(c.got.confidence)} ${badge(c.ok, 'Correct', 'Wrong')}</span></summary>
   <p class="small" style="margin:8px 14px 0">Action ${badge(c.actionOk, 'right', 'differs')} (want ${esc(c.expected.next_action.join(' or ').replace(/_/g, ' '))}) · owner ${badge(c.ownerOk, 'right', 'differs')} (want ${esc(c.expected.owner_pod.join(' or '))}) · escalation ${badge(c.escalationOk, 'right', 'differs')} (want ${c.expected.needs_human ? 'human' : 'no human'})${c.falseDefect ? ' · ' + badge(false, '', 'false defect match') : ''}</p>
   <div class="case-body"><p class="small muted">${esc(c.testName)}</p>${resultBody(c.got, c.guardrailNotes)}</div></details>`,
@@ -155,6 +160,7 @@ ${banner}
   <div class="kpis">
     ${tile('Accuracy', `${pct(ev.correct, ev.total)}%`, `${ev.correct} of ${ev.total} classified correctly`)}
     ${ev.cohorts ? tile('Cases not tuned on', `${ev.cohorts.heldOut.correct}/${ev.cohorts.heldOut.total}`, `added after the prompt was frozen; ${ev.cohorts.heldOut.realCorrect}/${ev.cohorts.heldOut.real} of the real ones`) : ''}
+    ${ev.rules ? tile('Decided by rule', `${ev.rules.decided}/${ev.total}`, `no model call; ${ev.rules.correct} correct`) : ''}
     ${tile('Known defect matched', `${ev.knownDefect.matched}/${ev.knownDefect.total}`, 'cases where the right DEF-xx was named')}
     ${tile('Real bugs called flaky', String(ev.falseFlaky), 'the costly mistake: it hides bugs')}
     ${tile('Next action right', `${ev.nextAction.action}/${ev.total}`, `owner pod ${ev.nextAction.owner}/${ev.total}, both ${ev.nextAction.both}/${ev.total}`)}
@@ -217,10 +223,10 @@ if (summaryPath) {
   if (!tr) lines.push('No triage output in this build.');
   else if (tr.totalFailing === 0) lines.push('No failing or flaky tests in this run.');
   else {
-    lines.push(`${tr.totalFailing} failing or flaky test(s), ${tr.triaged} triaged (${tr.mode}). Shadow mode: suggestions only.`, '', '| Test | Result | Confidence | Next action |', '|---|---|---|---|');
+    lines.push(`${tr.totalFailing} failing or flaky test(s), ${tr.triaged} triaged (${tr.mode}): ${tr.byRule ?? 0} by rule with no model call, ${tr.modelCalls ?? 0} by the model. Shadow mode: suggestions only.`, '', '| Test | Result | Confidence | Next action |', '|---|---|---|---|');
     for (const e of tr.entries) {
       const r = e.outcome?.result;
-      lines.push(`| ${e.testName.replace(/\|/g, '\\|')} | ${r ? `${label(r.classification)}${r.known_defect ? ` (${r.known_defect})` : ''}${r.needs_human ? ', needs a human' : ''}` : 'not classified'} | ${r ? r.confidence : '-'} | ${r ? `${r.next_action.type.replace('_', ' ')} · ${r.next_action.owner_pod}` : '-'} |`);
+      lines.push(`| ${e.testName.replace(/\|/g, '\\|')} | ${r ? `${e.outcome.decidedBy === 'rule' ? '[rule] ' : ''}${label(r.classification)}${r.known_defect ? ` (${r.known_defect})` : ''}${r.needs_human ? ', needs a human' : ''}` : 'not classified'} | ${r ? r.confidence : '-'} | ${r ? `${r.next_action.type.replace('_', ' ')} · ${r.next_action.owner_pod}` : '-'} |`);
     }
   }
   writeFileSync(resolve(summaryPath), lines.join('\n') + '\n');

@@ -30,6 +30,7 @@
     "unhealthyContainers": [
       "checkout",
       "product-catalog"
-    ]
+    ],
+    "gatewayTimeoutSiblings": 6
   }
 }
