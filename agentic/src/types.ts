@@ -51,6 +51,7 @@ export interface RunContext {
   attempts?: { status: string; error?: string }[];
   annotations?: { type: string; description?: string }[];
   siblingFailures: string[];
+  gatewayTimeoutSiblings?: number; // other failed tests in this run whose own error is a 504
   totalFailed?: number;
   totalExecuted?: number;
   unhealthyContainers: string[];

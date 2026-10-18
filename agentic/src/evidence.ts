@@ -11,6 +11,9 @@ interface PwTest {
   results: { status: string; error?: { message?: string } }[];
 }
 
+export const GATEWAY_TIMEOUT = /Received:\s*504\b|\b504 Gateway Time-?out/i;
+const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, '');
+
 /** Flattens Playwright's JSON report (the same file dashboard/build.mjs reads). */
 export function flattenResults(report: any): PwTest[] {
   const out: PwTest[] = [];
@@ -65,6 +68,7 @@ export function collectEvidence(input: TriageInput, opts: CollectOptions = {}): 
     }
     const failed = tests.filter(t => t.status === 'unexpected' && t !== mine);
     ctx.siblingFailures = failed.map(t => t.title);
+    ctx.gatewayTimeoutSiblings = failed.filter(t => GATEWAY_TIMEOUT.test(stripAnsi(t.results.at(-1)?.error?.message ?? ''))).length;
     ctx.totalFailed = failed.length + (mine?.status === 'unexpected' ? 1 : 0);
     ctx.totalExecuted = tests.filter(t => t.status !== 'skipped').length;
   }

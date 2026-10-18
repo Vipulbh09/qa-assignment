@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ruleVerdict } from './baseline.ts';
 import { collectEvidence, findUnhealthy, flattenResults } from './evidence.ts';
 import { applyGuardrails } from './guardrails.ts';
 import { loadKnownDefects } from './knowledge.ts';
@@ -126,4 +130,64 @@ test('triage retries once on an invalid reply, then guards the valid one', async
 test('triage gives up after two invalid replies', async () => {
   const llm: LlmClient = { complete: async () => ({ output: { nope: true }, durationMs: 1 }) };
   await assert.rejects(triage({ testName: 't', log: 'l', gitDiff: '' }, llm, repoRoot), /schema validation twice/);
+});
+
+// ---------- rules-only baseline ----------
+const A504 = 'Error: expect(received).toBe(expected)\n\nExpected: 200\nReceived: 504\n';
+const wall = (log: string, ctx: Partial<EvidencePack['context']> = {}, diff = '') =>
+  collectEvidence(
+    { testName: 'api/checkout.spec.ts > TC-CHK-02 order cost equals price', log, gitDiff: diff },
+    { context: { status: 'unexpected', siblingFailures: ['a', 'b', 'c', 'd'], gatewayTimeoutSiblings: 4, ...ctx } },
+  );
+const attempts = (...logs: string[]) => logs.map((l, i) => `Attempt ${i + 1} (failed):\n${l}`).join('\n\n');
+const productDiff = 'diff --git a/src/checkout/main.go b/src/checkout/main.go\n+  time.Sleep(20 * time.Second)\n';
+
+test('rule: a 504 on every attempt plus a wall of 504s is an environment issue, with no model call', async () => {
+  const p = wall(attempts(A504, A504));
+  const v = ruleVerdict(p);
+  assert.equal(v?.ruleId, 'gateway-504-wall');
+  assert.equal(v?.result.classification, 'environment_issue');
+  const never: LlmClient = { complete: async () => { throw new Error('the model must not be called'); } };
+  const o = await triage(p.input, never, repoRoot, { context: p.context });
+  assert.equal(o.decidedBy, 'rule');
+  assert.equal(o.result.confidence, 'high'); // survives the guardrails: log + signal are two sources
+  assert.equal(o.durationMs, 0);
+});
+
+test('rule: does not fire without a wall, on retry-pass, on mixed codes, or on an expected 504', () => {
+  assert.equal(ruleVerdict(wall(attempts(A504, A504), { gatewayTimeoutSiblings: 2 })), null, 'one or two 504s could be a product timeout');
+  assert.equal(ruleVerdict(wall(attempts(A504, 'passed'), { status: 'flaky' })), null, 'flaky goes to the model');
+  assert.equal(ruleVerdict(wall(attempts(A504, 'Expected: 200\nReceived: 500\n'))), null, 'a 504 then a 500 is not this rule');
+  assert.equal(ruleVerdict(wall(attempts('Expected: 504\nReceived: 200\n'))), null, 'a test that expects 504 got 200');
+  assert.equal(ruleVerdict(wall(attempts('Expected: 57.08\nReceived: 57.8\n'))), null, 'a wall around a test whose own error is a wrong value (the DEF-01 shape)');
+  assert.equal(ruleVerdict(wall(attempts('Expected: 200\nReceived: 502\n'))), null, 'only 504 is a rule');
+});
+
+test('rule: a diff to a service on the request path goes to the model; an unrelated service does not', () => {
+  assert.equal(ruleVerdict(wall(attempts(A504, A504), {}, productDiff)), null);
+  const unrelated = 'diff --git a/src/ad/src/main/java/oteldemo/AdService.java b/src/ad/src/main/java/oteldemo/AdService.java\n+  // todo\n';
+  assert.equal(ruleVerdict(wall(attempts(A504, A504), {}, unrelated))?.ruleId, 'gateway-504-wall');
+});
+
+test('rule: rules: false always calls the model', async () => {
+  let calls = 0;
+  const llm: LlmClient = {
+    complete: async () => {
+      calls++;
+      return { output: result({ classification: 'environment_issue', confidence: 'medium' }), durationMs: 1 };
+    },
+  };
+  const p = wall(attempts(A504, A504));
+  const o = await triage(p.input, llm, repoRoot, { context: p.context, rules: false });
+  assert.equal(calls, 1);
+  assert.equal(o.decidedBy, 'model');
+});
+
+test('evidence: counts sibling failures whose own error is a 504', () => {
+  const spec = (title: string, msg: string) => ({ title: 's', specs: [{ title, file: 'a.spec.ts', tests: [{ projectName: 'api', status: 'unexpected', results: [{ status: 'failed', error: { message: msg } }] }] }] });
+  const report = { suites: [{ file: 'a.spec.ts', title: 'a.spec.ts', suites: [spec('mine', A504), spec('b', A504), spec('c', 'Expected: 200\nReceived: 500'), spec('d', A504)] }] };
+  const f = join(mkdtempSync(join(tmpdir(), 'tri-')), 'results.json');
+  writeFileSync(f, JSON.stringify(report));
+  const p = collectEvidence({ testName: 'mine', log: A504, gitDiff: '' }, { resultsPath: f });
+  assert.equal(p.context.gatewayTimeoutSiblings, 2);
 });

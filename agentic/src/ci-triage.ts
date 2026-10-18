@@ -4,7 +4,7 @@ import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { collectEvidence, flattenResults } from './evidence.ts';
 import { ClaudeCodeCli } from './llm/ClaudeCodeCli.ts';
-import { triage, type TriageOutcome } from './triage.ts';
+import { triage, triageByRule, type TriageOutcome } from './triage.ts';
 import type { Signal } from './types.ts';
 
 // eslint-disable-next-line no-control-regex
@@ -20,10 +20,11 @@ const { values } = parseArgs({
     model: { type: 'string', default: 'sonnet' },
     max: { type: 'string', default: '6' },
     'signals-only': { type: 'boolean', default: false },
+    'no-rules': { type: 'boolean', default: false },
   },
 });
 if (!values.results) {
-  console.error('usage: node src/ci-triage.ts --results results.json [--docker-ps f] [--diff f] [--out f] [--max 6] [--signals-only]');
+  console.error('usage: node src/ci-triage.ts --results results.json [--docker-ps f] [--diff f] [--out f] [--max 6] [--signals-only] [--no-rules]');
   process.exit(2);
 }
 
@@ -32,7 +33,7 @@ export interface TriageEntry {
   status: string;
   project?: string;
   signals: Signal[];
-  outcome?: Pick<TriageOutcome, 'result' | 'guardrailNotes' | 'durationMs' | 'promptVersion'>;
+  outcome?: Pick<TriageOutcome, 'decidedBy' | 'ruleId' | 'result' | 'guardrailNotes' | 'durationMs' | 'promptVersion'>;
   error?: string;
 }
 
@@ -51,32 +52,44 @@ const failing = [
   ...all.filter(t => t.status === 'flaky'),
 ];
 const max = Number(values.max);
-const picked = failing.slice(0, max);
+const useRules = !values['no-rules'];
 
 const llm = new ClaudeCodeCli({ model: values.model });
 const entries: TriageEntry[] = [];
+let modelCalls = 0;
+let byRule = 0;
 
-for (const t of picked) {
+// The cap counts model calls only. A failure a rule decides costs nothing, so it never uses up the cap.
+for (const t of failing) {
   const testName = `${t.file ?? ''} > ${t.title}`;
   const log = t.results
     .map((r, i) => `Attempt ${i + 1} (${r.status}):\n${stripAnsi(r.error?.message ?? '(no error message)')}`)
     .join('\n\n');
   const input = { testName, log, gitDiff };
   const opts = { resultsPath, dockerPsPath: dockerPs };
-  const entry: TriageEntry = { testName, status: t.status, project: t.project, signals: collectEvidence(input, opts).signals };
+  const pack = collectEvidence(input, opts);
+  const entry: TriageEntry = { testName, status: t.status, project: t.project, signals: pack.signals };
 
-  if (!values['signals-only']) {
-    process.stdout.write(`triaging ${t.title} ... `);
-    try {
-      const o = await triage(input, llm, repoRoot, opts);
-      entry.outcome = { result: o.result, guardrailNotes: o.guardrailNotes, durationMs: o.durationMs, promptVersion: o.promptVersion };
-      console.log(`${o.result.classification} (${o.result.confidence})`);
-    } catch (e) {
-      // Shadow mode: a model failure must never fail the build.
-      entry.error = String((e as Error).message).slice(0, 400);
-      console.log(`failed: ${entry.error}`);
+  const ruled = useRules ? triageByRule(pack, repoRoot) : null;
+  if (ruled) {
+    entry.outcome = { decidedBy: 'rule', ruleId: ruled.ruleId, result: ruled.result, guardrailNotes: ruled.guardrailNotes, durationMs: 0, promptVersion: ruled.promptVersion };
+    byRule++;
+    console.log(`${t.title}: ${ruled.result.classification} by rule ${ruled.ruleId}`);
+  } else if (modelCalls < max) {
+    modelCalls++;
+    if (!values['signals-only']) {
+      process.stdout.write(`triaging ${t.title} ... `);
+      try {
+        const o = await triage(input, llm, repoRoot, { ...opts, rules: false });
+        entry.outcome = { decidedBy: 'model', result: o.result, guardrailNotes: o.guardrailNotes, durationMs: o.durationMs, promptVersion: o.promptVersion };
+        console.log(`${o.result.classification} (${o.result.confidence})`);
+      } catch (e) {
+        // Shadow mode: a model failure must never fail the build.
+        entry.error = String((e as Error).message).slice(0, 400);
+        console.log(`failed: ${entry.error}`);
+      }
     }
-  }
+  } else continue; // over the cap: not triaged this run
   entries.push(entry);
 }
 
@@ -87,6 +100,8 @@ const out = {
   totalFailing: failing.length,
   triaged: entries.length,
   skipped: failing.length - entries.length,
+  byRule,
+  modelCalls: values['signals-only'] ? 0 : modelCalls,
   entries,
 };
 mkdirSync(dirname(resolve(values.out)), { recursive: true });

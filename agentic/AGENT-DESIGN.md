@@ -19,7 +19,7 @@ flowchart LR
   I -->|confirms or corrects| J[Eval history]
 ```
 
-One structured model call, not a free-roaming agent. Everything that needs no judgement (parsing the Playwright report, spotting unhealthy containers, matching known defect signatures) is plain code. The model only weighs the evidence. That keeps it cheap (about 8 seconds and a fraction of a cent per failure), testable, and impossible for it to run a destructive command, because it has no tools.
+One structured model call, not a free-roaming agent. Everything that needs no judgement (parsing the Playwright report, spotting unhealthy containers, matching known defect signatures, and classifying a wall of 504s) is plain code. The model only weighs the evidence. That keeps it cheap (about 8 seconds and a fraction of a cent per failure), testable, and impossible for it to run a destructive command, because it has no tools.
 
 ## What the agent decides, and what stays with a human
 
@@ -32,6 +32,25 @@ One structured model call, not a free-roaming agent. Everything that needs no ju
 | Whether it needs a person (`needs_human`) | **Anything touching money**: currency, payment, checkout, pricing |
 
 Escalation to a human is forced, in code, when confidence is low, when evidence cannot be verified, or when a money-area failure is called flaky.
+
+## Rules-only baseline (`src/baseline.ts`)
+
+One failure type is decided by a rule, with no model call: **a wall of 504s**. It fires only when all of these hold:
+
+1. The test failed on **every attempt** and Playwright marked it `unexpected` (a retry-pass is `flaky` and goes to the model).
+2. **Every attempt's own error is a 504** (`Received: 504` or `504 Gateway Timeout`). `Expected: 504` and a 504 on one attempt followed by a 500 do not count.
+3. **At least 3 other failed tests in the same run also ended in a 504.** One or two could be a product timeout.
+4. The diff touches **no service on the request path** (`src/checkout`, `cart`, `payment`, `currency`, `product-catalog`, `quote`, `shipping`, `frontend`, `frontend-proxy`). A change to `src/ad` does not block it.
+
+The verdict is `environment_issue`, `restart_env`, Quality Platform, high confidence, with the real 504 line and the sibling count as evidence, then the normal guardrails. It is marked `decidedBy: rule`, costs 0 s and no model call, and does not use up the `--max 6` cap, so every failure in a wall gets a verdict. `--no-rules` forces everything to the model.
+
+**Why only 504.** I counted the status codes in the two real outages I captured. Pausing `product-catalog` gave 504 on 16 of 19 tests. Stopping `currency` gave almost no 504s: 10 tests failed 500 twice, 4 failed 500 once and 2 failed 504 then 500. So a 504 rule covers one kind of outage and not the other. It does not extend to 500, because the product's own bugs also return 500. Timeouts, locator failures, a `TypeError` in test code (the `currency` outage produced one at `checkout.spec.ts:53`) and wrong values stay with the model.
+
+**Not covered, on purpose.** The `docker stop currency` outage still costs model calls. Catching it by rule needs `docker ps -a` and a check for exited, paused or restarting containers, which the current CI step does not collect and the current detector (`unhealthy` only) misses.
+
+**Measured so far.** On the real `docker pause` run, 11 of the 14 failures are decided by rule and 3 go to the model. In the eval, 2 of 30 cases take the rule (`env-01`, `env-04`), both correct. `pb-13` is a hard negative: a 504 wall caused by a `time.Sleep` added to `src/checkout`; the rule steps aside and the model gets it right. That is a small precision check, not a precision estimate. Unit tests cover the cases that must not fire.
+
+**Risk.** A real regression that makes many tests time out would be called an environment issue if the diff does not touch a request-path service (for example a change to a shared library or the Compose file). The verdict says "do not file a bug from this run", so a human still sees it, but it is the failure mode to watch.
 
 ## Output contract
 
@@ -80,7 +99,7 @@ The `agent` job in [`.github/workflows/e2e.yml`](../.github/workflows/e2e.yml) r
 |---|---|---|
 | `npm run check` | Always | Typecheck and 12 unit tests. No model, no secret |
 | Eval (29 cases) | Push to `main`, nightly, manual, **and only if the secret exists** | Re-runs the eval through Claude Code. Not on PRs: it is 29 model calls |
-| Triage this run's failures | Always (model only if the secret exists) | Reads `results.json`, triages up to 6 failed or flaky tests with the last commit's diff and container health. Without the secret it reports the rule-based signals only and says so |
+| Triage this run's failures | Always (model only if the secret exists; the 504 rule needs no secret) | Reads `results.json`, triages up to 6 failed or flaky tests with the last commit's diff and container health. Without the secret it reports the rule-based signals only and says so |
 | Report | Always | Builds the page and appends a summary to the job's `GITHUB_STEP_SUMMARY` |
 
 The `dashboard` job then publishes the report **inside the existing GitHub Pages site** at `/agent/` (a repository can only deploy one Pages site), linked from the QA metrics dashboard. The page says plainly when the eval was *not* re-run and it is showing the last committed result.

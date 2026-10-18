@@ -1,0 +1,12 @@
+diff --git a/src/checkout/main.go b/src/checkout/main.go
+--- a/src/checkout/main.go
++++ b/src/checkout/main.go
+@@ -380,6 +380,9 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
+ 	log.Infof("[PlaceOrder] user_id=%q user_currency=%q", req.UserId, req.UserCurrency)
+ 
++	// wait for the payment provider connection to warm up
++	time.Sleep(20 * time.Second)
++
+ 	prep, err := cs.prepareOrderItemsAndShippingQuoteFromCart(ctx, req.UserId, req.UserCurrency, req.Address)
+ 	if err != nil {
+ 		return nil, status.Errorf(codes.Internal, err.Error())

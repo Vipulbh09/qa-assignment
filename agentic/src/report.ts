@@ -19,6 +19,6 @@ export function renderMarkdown(testName: string, o: TriageOutcome): string {
     r.next_action.detail,
     ...(o.guardrailNotes.length ? ['', '## Guardrails applied', ...o.guardrailNotes.map(n => `- ${n}`)] : []),
     '',
-    `<sub>prompt ${o.promptVersion} · ${(o.durationMs / 1000).toFixed(1)}s · shadow mode: no action was taken</sub>`,
+    `<sub>${o.decidedBy === 'rule' ? `decided by rule ${o.ruleId}, no model call` : `prompt ${o.promptVersion} · ${(o.durationMs / 1000).toFixed(1)}s`} · shadow mode: no action was taken</sub>`,
   ].join('\n');
 }
