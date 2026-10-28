@@ -30,7 +30,11 @@ It links to existing documentation instead of copying it. The entity types are a
 | **AI assistants** | Answer from verified, cited facts instead of guessing, and say when information is missing. |
 
 ## How people use it
-Open the repo and search it, run a CLI lookup (`ctx owner svc-orders`, `ctx tests-for <change>`), or ask a chat or IDE assistant that reads the specs and cites them.
+- **Directly:** open the repo and search it, or run a CLI lookup (`ctx owner svc-orders`, `ctx tests-for <change>`).
+- **Through any AI tool the company uses** (Claude, an IDE assistant, a chat bot): the tool is pointed at this repo, so it can
+  - **answer questions** about systems, owners, dependencies, tests and product behaviour from the specs, with citations, and say when something is missing;
+  - **make changes that follow the org context**, such as editing dev code, writing or updating test cases, or drafting a PR, using the right conventions, owners, business rules and existing coverage. For example, a change to a service also pulls in that service's rules, known defects and the tests that should be updated.
+- Changes made by an AI tool go through the normal pull-request review by the owning team, so people stay in control.
 
 ## Starting small
 Begin with a few representative systems and one or two use cases, such as finding owners and dependencies, and picking relevant tests. Measure whether it saves time and improves answers, then expand.
