@@ -1,298 +1,283 @@
-# Plan: an organizational context platform, and where product context goes next
+# Plan: an Organizational Context Repository
 
-Status: draft for discussion. Nothing here is built.
+A proposal for a dedicated **context repo** that holds structured, versioned knowledge about an organization's systems, products, teams and tests, and for how employees and AI agents use it to find what is relevant to them.
 
-How to read the labels:
-- **[Confirmed]** is true today and can be checked in this repo or in what you told me.
-- **[Assumption]** is something I had to guess. It needs validating before it drives a decision.
+Status: plan only. Nothing is built. It is written to show how this could be achieved, in phases, with the decisions and risks stated.
+
+Labels used throughout:
+- **[Given]** comes from the brief.
+- **[Assumption]** is my guess about the organization. It needs validating.
 - **[Recommendation]** is my proposal. It can be changed.
 
-Relationship to [`plan.md`](plan.md): that plan builds a product-context pack for one system (the OpenTelemetry Astronomy Shop) so a test-case generation agent can use it. This plan is the next step. It generalises that pack into a platform an organization can run for all of its systems, and it uses the shop pack as the pilot.
+All example names (Acme, `svc-orders`, teams) are fictional and illustrate the shape of the data only.
 
 ---
 
 ## 1. Executive summary
 
-**The problem.** Knowledge about how systems, products, teams and tests fit together lives in docs, Slack threads, spreadsheets and people's heads. Engineers, QA and now AI agents all pay for that. People lose time finding basics, and agents guess from general knowledge when they should read the facts.
+**Problem.** Knowledge about how systems, products, teams and tests fit together is scattered across wikis, chat, tickets, code and people's heads. Employees spend time finding basics and asking colleagues. AI assistants fill the gaps with general knowledge, which is confident and often wrong for this particular organization.
 
-**The proposal.** A version-controlled repository of typed, validated specification files (YAML plus schemas) that describe systems, services, owners, test suites, coverage, features, use cases, business rules and sources of truth. Humans read and edit it through normal pull requests. Tools and agents read the same files through a small lookup layer. Each fact says where it came from and when it was last verified.
+**Proposal.** One dedicated Git repository, the *context repo*, holding typed YAML specs (systems, services, teams, test suites, coverage, features, use cases, business rules, glossary) with schemas, CI validation and a source and freshness record on every fact. People edit it by pull request. Employees and agents read it through simple, increasingly capable access layers: plain files, then a CLI, then a chat or IDE agent, and an API or MCP server only if needed.
 
-**Business value, in the order I'd expect it to show up:**
-1. QA: given a change or a feature, the right regression tests and the right new test ideas are found in minutes, not by asking around.
-2. Agents: answers and generated tests cite specs instead of guessing, which can be measured.
-3. Engineering: ownership, dependencies and local setup are discoverable.
-4. Leadership: gaps in ownership, coverage and documentation are visible as numbers.
+**Value, in the order I expect it to appear:**
+1. **Find things fast.** "Who owns this, what does it depend on, how do I run it, what tests cover it?" answered in seconds with a source.
+2. **Better QA.** The right regression tests for a change, and visible coverage gaps.
+3. **Trustworthy agents.** Answers that cite specs and say when information is missing.
+4. **Onboarding and leadership visibility.** Faster ramp-up; ownership and documentation gaps measured, not guessed.
 
-**Approach.** Start small and prove value on one use case (test generation and test selection for one system). Add entity types, tools and infrastructure only when a real use case demands them.
-
----
-
-## 2. What is confirmed, assumed and unknown
-
-### Confirmed
-- The repo is a QA assignment against the OpenTelemetry Astronomy Shop demo, pinned to upstream commit `ac0443b` in `.demo/`.
-- It already holds structured knowledge that the platform would formalise: 11 defect reports in `bugs/`, 11 manual test cases in `test-cases/`, a risk-based `test-strategy.md`, and a Playwright suite in `automation/` (49 tests, page-object structure, CI gate for known defects).
-- It already has an agent pattern to reuse: `agentic/` (Claude Code login via `claude -p`, schemas, prompts as files, a labelled eval set).
-- You want a test-case generation agent to use product context to identify test cases ([`plan.md`](plan.md)).
-
-### Assumptions to validate
-- **[Assumption]** The "organization" is a real or hypothetical engineering organization with many systems and teams. Nothing in this repo describes one. Every organization-level detail below is generic until you supply facts.
-- **[Assumption]** QA and quality engineering is the first and most valuable audience, because that is the work this repo shows.
-- **[Assumption]** Source code is in Git, and pull-request review is already normal practice.
-- **[Assumption]** Teams will keep specs up to date only if the specs are used by something they care about (CI, an agent, a tool). Documentation nobody consumes decays.
-
-### Unknown, needs stakeholder input
-See section 10.
+**Approach.** Start with the narrowest useful slice: engineering context for a handful of systems, serving one or two concrete use cases. Prove it with measurement. Add entity types and infrastructure only when a real question can't be answered.
 
 ---
 
-## 3. Architecture and repository structure
+## 2. Requirements, assumptions and unknowns
+
+### Given [Given]
+- A centralized, machine-readable, version-controlled knowledge repository.
+- Two audiences: employees (engineers, QA, product, others) and AI agents.
+- Candidate content: systems, repositories, services, teams, test suites, coverage mapping, dev environment, product areas, features, use cases, business entities, plans/entitlements, personas, glossary, sources of truth, documentation references, ownership and freshness.
+- Typed specification files (YAML or similar), schemas, validation in CI, ownership and PR workflow, optional CLI, agent access that starts simple.
+- The entity list is a candidate set, not mandatory.
+
+### Assumptions to validate [Assumption]
+- Code lives in Git and PR review is normal practice.
+- The first and highest-value audience is engineering and QA; product context comes later.
+- Teams will maintain specs only if something they care about consumes them (CI, a tool, an agent).
+- Some documentation already exists (wiki, README files, service catalogue). The repo links to it and structures what matters; it does not copy it wholesale.
+- There are enough systems (dozens, not two) that finding things is a real problem.
+
+### Unknown, needs input
+Listed in section 11.
+
+---
+
+## 3. Architecture
 
 ### Principles [Recommendation]
-Structured over scattered. Authoritative over speculative. Store a fact once and link to it. Human-readable and machine-readable. Governed but lightweight. Start with files, not infrastructure.
+Structured over scattered. Authoritative over speculative. Store once, link elsewhere. Readable by people and parseable by tools. Governed but lightweight. Simplest access that works.
 
 ### Layers
 ```
- Sources of truth        code, protos, compose, flag config, docs, tickets, test results
-        |  (generators + human curation)
- Spec repository         typed YAML + schemas + validation in CI        <- the platform's core
+  Existing sources          code repos, API contracts, CI results, wiki, tickets, service catalogue
+        |   (generators for facts, humans for judgement)
+  CONTEXT REPO              typed YAML + JSON Schemas + CI validation   <- the core
         |
- Access layer            1) files + search   2) CLI lookup   3) MCP/API (only if needed)
+  Access layers (add only when needed)
+        1. Files + repo search
+        2. CLI                 deterministic lookups
+        3. Chat / IDE agent    uses the CLI and a retrieval skill
+        4. API / MCP server    only if several clients need it
+        5. Index / graph       only if relationship queries outgrow the CLI
         |
- Consumers               engineers, QA, product, test-gen agent, triage agent, CI
+  Employees and agents      engineers, QA, product, support, leadership, automation
 ```
 
-### Repository layout [Recommendation]
-Adapted from the concept: only directories with a Phase 1-3 use are included.
-
+### Repository structure [Recommendation]
 ```
-context/
-  schemas/            # one JSON Schema per entity type (the contract)
-  systems/            # system + service specs
-  teams/              # ownership, escalation
-  testing/            # test suites, coverage mappings, known defects
-  product/            # features, use cases, business rules, entitlements (later phase)
-  glossary/           # domain terms
-  sources/            # source-of-truth registry (what is authoritative for what)
-  tools/              # validate, lookup, generate, staleness check
-  docs/               # contributor guide, readiness model, ADRs
+context-repo/
+  schemas/        # one JSON Schema per entity type; the contract
+  systems/        # system + service specs, one folder per system
+  teams/          # teams, owners, escalation, channels
+  testing/        # test suites, coverage mappings, known defects
+  product/        # product areas, features, use cases, business rules   (phase 4)
+  glossary/       # domain terms
+  sources/        # source-of-truth registry
+  tools/          # validate, lookup, generate, staleness check, CLI
+  docs/           # contributor guide, readiness model, ADRs, agent retrieval guide
+  CODEOWNERS
 ```
-Not created until needed: `personas/`, knowledge graph, search index, MCP server.
+Not created until a use case needs it: `personas/`, plans/entitlements (unless the business has them), search index, graph, MCP server.
 
-### Where this sits relative to the current repo
-**[Recommendation]** Keep the pilot inside this repo as `product-context/` (per `plan.md`), shaped exactly like one system's slice of the layout above. When a second system exists, extract the schemas and tools into a shared repo and keep per-system specs next to each system's code. That makes the owner of the code the owner of the spec.
+### Central repo or specs beside code? [Recommendation]
+Start **central**: one place to search, validate and measure, and simple for a pilot. Revisit when many teams are contributing. The likely end state is **hybrid**: schemas and shared entities central, per-system specs in each system's repo (so the code owner owns the spec) and aggregated by tooling. This is a decision for stakeholders (section 11).
 
 ---
 
 ## 4. Prioritized entity model
 
-Priority is by how directly an entity feeds the first use case (QA test selection and generation).
+Priority is by how directly an entity helps the first use cases (find owners and dependencies, find relevant tests).
 
 | Priority | Entity | Why | Phase |
 |---|---|---|---|
-| P0 | **System**, **Service** | Anchor for everything else | 2 |
-| P0 | **Team / Ownership** | Who to ask, who reviews | 2 |
-| P0 | **Test Suite**, **Coverage Mapping** | Core of test selection and gap finding | 2 |
-| P0 | **Source of Truth**, **Freshness** (a field on every entity, not a separate type) | Makes facts trustworthy | 2 |
-| P1 | **Feature**, **Use Case** | Links product behaviour to systems and tests | 3 to 5 |
-| P1 | **Business Rule / Invariant** | What must always hold; the richest source of test ideas | 3 |
-| P1 | **Known Defect** | Patterns to avoid repeating; regression targets | 3 |
-| P1 | **Feature Flag / Fault Injection** | Testability hooks | 3 |
-| P2 | **Business Entity**, **Glossary** | Shared language, agent grounding | 5 |
-| P2 | **Development Environment** | Local setup via tooling | 3 to 6 |
-| P3 | **Plan / Entitlement**, **Persona** | Only where the organization has them | 5+ |
+| P0 | System, Service, Repository | Anchor for everything | 1 |
+| P0 | Team / Ownership | Who owns it, who to ask | 1 |
+| P0 | Test Suite, Coverage Mapping | Test discovery and gap finding | 2 |
+| P0 | Source of Truth and Freshness (fields on every entity, plus a registry) | Trust | 1 |
+| P1 | Development Environment | Run it locally | 2 |
+| P1 | Feature, Use Case, Business Rule | Link product behaviour to systems and tests | 4 |
+| P1 | Known Defect | Regression targets and risk patterns | 2 to 4 |
+| P2 | Business Entity, Glossary | Shared language, agent grounding | 4 |
+| P3 | Plan / Entitlement, Persona | Only if the business has them | 5+ |
 
-Entities not in this list should be added only when someone asks a question the model cannot answer.
-
-### Common fields (every entity) [Recommendation]
+### Fields common to every entity [Recommendation]
 ```yaml
-id: <kebab-case, globally unique, stable>
-kind: <entity type>
-title: <human name>
-owner: <team id>
+id: svc-orders                  # stable, unique, kebab-case
+kind: service
+title: Orders service
+owner: team-orders              # required to leave 'draft'
 status: draft | reviewed | deprecated
 verified:
   level: verified-by-running | read-from-code | docs-only | inferred
   by: <person or tool>
-  on: <date>
-sources:            # at least one for anything above 'draft'
-  - type: code | proto | doc | ticket | test-run
-    ref: <path:line | URL | id>
-    commit: <sha, where applicable>
-links:              # relationships; always typed, never prose
+  on: 2026-01-15
+sources:                        # at least one above 'draft'
+  - { type: code | api-contract | doc | ticket | test-run, ref: <path | URL | id> }
+links:                          # typed relationships, never prose
   depends_on: []
   tested_by: []
   documented_in: []
 ```
-**Important rule:** an absent link means *unknown*, not *none*. Specs may say `depends_on_complete: true` to assert that the list is exhaustive. Agents must not treat missing metadata as proof that a dependency does not exist.
+**Absence rule.** A missing link means *unknown*, not *none*. A spec may assert completeness (`depends_on_complete: true`). Agents must not infer "no dependency" or "no test" from silence.
 
-### Example schemas (illustrative, using this repo's pilot)
+### Example specs (fictional)
 
-**System / Service**
+**Service**
 ```yaml
-id: svc-checkout
+id: svc-orders
 kind: service
-title: Checkout service
-owner: team-shop-checkout          # [Assumption] placeholder team
-system: sys-astronomy-shop
+title: Orders service
+owner: team-orders
+system: sys-storefront
+repo: repo-orders
 language: go
-api:
-  protocol: grpc
-  contract: { ref: .demo/pb/demo.proto, commit: ac0443b }
-depends_on: [svc-cart, svc-currency, svc-payment, svc-shipping, svc-product-catalog, svc-email]
+api: { protocol: grpc, contract: "repo-orders:api/orders.proto" }
+depends_on: [svc-inventory, svc-payments, svc-notifications]
 depends_on_complete: true
-flags: [paymentFailure, ...]       # linked to flag entities
-tested_by: [suite-playwright-api, suite-playwright-ui, tc-chk-01]
-verified: { level: read-from-code, by: vipul, on: 2026-10-28 }
-sources: [{ type: code, ref: ".demo/src/checkout/main.go" }]
+tested_by: [suite-orders-api, suite-checkout-e2e]
+dev_env: env-storefront-local
+verified: { level: read-from-code, by: alice, on: 2026-01-15 }
+sources: [{ type: code, ref: "repo-orders:cmd/orders/main.go" }]
 ```
 
-**Test Suite**
+**Test suite**
 ```yaml
-id: suite-playwright-api
+id: suite-orders-api
 kind: test_suite
-title: Playwright API tests
-owner: team-qa
-location: automation/
-run: "cd automation && npm test"
-environments: [local-docker, ci]
-scope: { services: [svc-checkout, svc-currency, svc-cart, svc-payment] }
-stability: { flaky_policy: "1 retry, labelled in report" }
+title: Orders API tests
+owner: team-qa-storefront
+location: "repo-orders:tests/api"
+run: "make test-api"
+environments: [local, staging]
+scope: { services: [svc-orders], features: [feat-place-order] }
+type: automated
 ```
 
-**Coverage Mapping**
+**Coverage mapping**
 ```yaml
-id: cov-checkout-multi-currency
+id: cov-place-order
 kind: coverage_mapping
-covers: { feature: feat-checkout, rules: [rule-total-equals-sum-of-parts] }
-by:
-  automated: [pw-api-checkout-total]
-  manual:    [tc-chk-02]
-gap: "no test for unsupported currency code at checkout"   # this one is a known S1 defect area
+covers: { feature: feat-place-order, rules: [rule-total-equals-sum-of-lines] }
+automated: [suite-orders-api, suite-checkout-e2e]
+manual: [tc-order-edge-cases]
+gaps: ["no test for partial inventory availability"]
 ```
 
-**Business Rule / Invariant**
+**Business rule**
 ```yaml
-id: rule-price-shown-equals-price-charged
+id: rule-total-equals-sum-of-lines
 kind: business_rule
-statement: "The price shown for a product equals the price used in the cart and at checkout."
-applies_to: [feat-product-display, feat-cart, feat-checkout]
-violated_by: [defect-currency-price-shift]
-verified: { level: verified-by-running, on: 2026-10-18 }
+statement: "An order total equals the sum of line totals plus tax and shipping."
+applies_to: [feat-place-order, feat-cart]
+owner: team-product-storefront
 ```
 
-**Known Defect**
-```yaml
-id: defect-currency-unsupported-zero
-kind: known_defect
-severity: S1
-component: svc-currency
-pattern: "unvalidated input silently yields a zero value that downstream treats as valid"
-regression_test: pw-api-currency-unsupported
-report: bugs/<file>.md
-```
-Fields and IDs above are examples to show the shape, not a verified export of this repo's real IDs. Phase 2 generates them from the real files.
-
-**Source of Truth registry**
+**Source-of-truth registry**
 ```yaml
 - topic: api-contracts
-  authoritative: ".demo/pb/demo.proto"
-  consumers: [svc-*]
-  rule: "specs derive from this; never hand-copy field lists"
-- topic: known-defects
-  authoritative: "bugs/"
+  authoritative: "the .proto / OpenAPI file in each service repo"
+  rule: "specs reference it; they never hand-copy field lists"
+- topic: ownership
+  authoritative: "the HR / org directory"
 - topic: test-results
-  authoritative: "CI run artifacts (Playwright results.json)"
+  authoritative: "CI run artifacts"
 ```
 
 ---
 
 ## 5. Ownership, governance and contribution
 
-**[Recommendation]**
-
-| Concern | Rule |
+| Concern | Rule [Recommendation] |
 |---|---|
-| Who owns a spec | The team that owns the code or process it describes (`owner` field, required). No owner means the spec cannot leave `draft`. |
-| How changes land | Pull request. CODEOWNERS routes review to the owning team. |
-| What CI checks | Schema validity; unique and stable IDs; every link resolves; every `sources` ref exists (file exists, URL not 404); required fields by readiness level; no orphan entities. |
-| Where specs live | Next to the code they describe when possible; schemas and shared entities in the central repo. |
-| Generated vs curated | Anything derivable (API tables, dependency graphs, flag lists, test inventory) is generated and marked `generated: true`. Humans curate only judgement: rules, risks, failure modes. |
-| Freshness | Each entity has `verified.on`. A scheduled job flags entities whose source files changed after that date or that exceed a max age. |
-| Conflicts | The source-of-truth registry decides. A spec that disagrees with its authoritative source is a defect in the spec. |
+| Ownership | The team that owns the system or process owns its specs. The `owner` field is required; no owner means the spec stays `draft`. |
+| Changes | Pull request. CODEOWNERS routes review to the owning team. |
+| Automated checks | Schema validity; unique stable IDs; every link resolves; every `sources` ref exists; required fields per readiness level; no orphans; no secrets or personal data. |
+| Generated vs curated | Anything derivable (API tables, dependency graphs, test inventories, ownership from the org directory) is generated and marked `generated: true`. People curate judgement: rules, risks, gaps. |
+| Freshness | Each entity has `verified.on`. A scheduled job flags specs whose source changed after that date, or that exceed a maximum age, and opens an issue for the owner. |
+| Conflicts | The source-of-truth registry decides. A spec that disagrees with its source is a defect in the spec. |
+| Platform ownership | A small named maintainer group owns schemas, tooling and the contributor guide. |
 
 ### Readiness model (what "complete" means for a system)
 | Level | Requires |
 |---|---|
 | L0 Registered | System id, owner, repo link |
-| L1 Mapped | Services, dependencies (with `depends_on_complete`), docs links |
-| L2 Testable | Test suites with run commands, coverage mapping, testability notes |
+| L1 Mapped | Services, dependencies (with completeness flag), docs links |
+| L2 Testable | Test suites with run commands, coverage mapping, dev environment |
 | L3 Product-aware | Features, use cases, business rules, known defects linked |
-| L4 Agent-ready | All of the above `reviewed`, fresh, and passing the agent eval (section 7) |
+| L4 Agent-ready | All of the above reviewed, fresh, and passing the agent evaluation (section 9) |
 
 Adoption is reported per system as its readiness level.
 
 ---
 
-## 6. Roadmap, milestones and dependencies
+## 6. How employees find relevant things
 
-Phases follow the concept document, adjusted to start from what already exists. No dates, because team size and priorities are unknown.
+The point of the repo is retrieval. These are the experiences, simplest first. Each calls the same underlying specs.
+
+| Access | How it feels | Needs |
+|---|---|---|
+| **Browse and search** | Open the repo, search for a service or term, read a spec | Nothing but the repo |
+| **CLI** `ctx` | `ctx show svc-orders`, `ctx owner svc-orders`, `ctx deps svc-orders`, `ctx tests-for --diff change.patch`, `ctx glossary "SKU"` | The `tools/` code |
+| **Chat or IDE agent** | "Who owns checkout and what breaks if I change the payments API?" The agent calls the CLI, answers, cites spec IDs | A retrieval skill that tells the agent which commands and files to use |
+| **PR bot** | On a pull request, comments with affected services, owners to tag, suggested test suites, and *unmapped* files | CI plus the CLI |
+| **Dashboards** | Readiness, ownership gaps, stale specs, coverage gaps by team | The validator's output |
+| **API or MCP** | Other tools and agents query the same lookups remotely | Only if several clients need it |
+
+### How an agent should behave [Recommendation]
+- Use the documented retrieval path; never load the whole repo.
+- Prefer structured CLI lookups to free-text search.
+- Respect the source-of-truth registry.
+- Separate verified facts from inferred ones in the answer.
+- Report conflicts and missing metadata; never resolve them silently.
+- Never conclude "none" from absence.
+- Always cite entity IDs.
+- Recommend; do not change specs, tests or code without human approval.
+
+---
+
+## 7. Usage scenarios
+
+**New engineer, first week.** `ctx show sys-storefront` lists its services, owners, dev environment and docs. `ctx env sys-storefront` prints how to start it locally. They skip a week of asking around.
+
+**Developer planning a change.** "I'm changing the payments API." The agent runs `ctx impact svc-payments`: dependent services, owning teams to notify, the test suites that cover those paths, and any dependency marked incomplete so they know to double-check.
+
+**QA picking tests.** `ctx tests-for --diff change.patch` returns suites mapped to the touched services and features, plus a list of touched files that map to nothing. That list is the gap report.
+
+**QA designing new tests.** The agent loads the feature, its business rules, known defects and existing coverage, then proposes cases that cite those IDs and marks the ones already covered.
+
+**Product manager.** "Which tests cover the checkout use case?" returns use case, features, systems and suites, with gaps stated.
+
+**On-call engineer.** "Who owns `svc-notifications` and how do I escalate?" returns team, channel, escalation path and runbook link.
+
+**Engineering lead.** A quarterly view of systems by readiness level, specs with no owner, stale specs and coverage gaps.
+
+**Support or business analyst.** "What does 'entitlement' mean here and which features does the Pro plan include?" is answered from the glossary and plan entities, if the organization has them.
+
+---
+
+## 8. Roadmap, milestones and dependencies
+
+No dates: team size and priorities are unknown.
 
 | Phase | Deliverable | Exit criterion | Depends on |
 |---|---|---|---|
-| **0. Discovery** | Stakeholders, top 3 use cases, inventory of existing docs and metadata, answers to section 10 | Use cases ranked; a named owner for the pilot | Stakeholder time |
-| **1. Pilot spec set** (= `plan.md` phases 1 and 2) | Schemas for P0 entities; generators for proto, compose, flags, test inventory; deep specs for the shop's money path; validation in CI | CI validates the pack; money-path specs reviewed | Phase 0 decisions |
-| **2. Developer and QA tooling** | `ctx` CLI: `lookup`, `deps`, `owner`, `tests-for <service|file|diff>`, `validate`, `stale` | `tests-for` picks the known regression tests for a sample change | Phase 1 |
-| **3. Agent integration** (= `plan.md` phase 4) | Test-gen agent and triage agent read the pack through tiered loading; skill/instructions for retrieval path | With/without eval shows measurable gain (section 8) | Phase 2 |
-| **4. Product and business layer** | Features, use cases, rules, glossary, entitlements where relevant; coverage mapping from use case to tests | Each top use case traces feature to service to test | Phase 3 |
-| **5. Second system** | A different system onboarded by its own team using only the contributor guide | Onboarded without help from the platform author | Phase 4 |
-| **6. Scale** | Org-wide adoption metrics; MCP/API or search index **only if** file/CLI access proves insufficient | A written case showing the measured limit of the simpler approach | Phase 5 |
+| **0. Discovery** | Stakeholders, top 2 to 3 use cases, inventory of existing docs and catalogues, answers to section 11 | Use cases ranked; a sponsor and platform maintainers named | Stakeholder time |
+| **1. Foundation** | Repo, schemas for P0 entities, validation in CI, contributor guide, readiness model; 3 to 5 representative systems specced | CI green; pilot teams reviewed their own specs | Phase 0 |
+| **2. Testing and dev workflows** | Test suites and coverage mappings for the pilot systems; `ctx` CLI (`show`, `deps`, `owner`, `tests-for`, `validate`, `stale`); dev environment specs | `tests-for` selects the right suites on 5 past changes, checked by QA | Phase 1 |
+| **3. Agent access** | Retrieval skill or instructions; chat or IDE agent over the CLI; PR bot | The with/without evaluation (section 9) shows measurable improvement | Phase 2 |
+| **4. Product and business context** | Features, use cases, business rules, glossary, plans where relevant; use-case-to-test traceability | Top use cases trace feature to service to test | Phase 3 |
+| **5. Scale-out** | A team outside the pilot onboards using only the contributor guide; adoption metrics; hybrid model decision | Onboarded unaided | Phase 4 |
+| **6. Advanced access (conditional)** | MCP/API, index or graph | A written case showing the measured limit of the simpler layer | Phase 5 |
 
-**The critical path** is phase 1 into phase 3. Everything after it is optional until phase 3 shows the pack changes outcomes.
-
----
-
-## 7. Integrating developer tooling, QA workflows and AI agents
-
-### Access pattern, simplest first [Recommendation]
-1. **Files + search.** Agents and people read YAML directly. This works on day one.
-2. **CLI (`ctx`).** Deterministic queries that agents can call as a tool: `ctx tests-for --diff <patch>`, `ctx deps svc-checkout`, `ctx owner svc-currency`. This gives agents structured answers instead of grep.
-3. **MCP server or API.** Wrap the CLI only when multiple clients or remote use justify it.
-4. **Index or graph.** Only when relationship queries get too slow or complex for the CLI. Not before.
-
-### QA workflow
-- **Test selection:** a diff maps to files, services, features and the suites that cover them (`tests-for`). The result lists suites, the coverage-mapping entries used and any *unmapped* files, so gaps are visible instead of silently ignored.
-- **Test generation:** the agent loads Tier 0 (index, rules), Tier 1 (slices selected by tags from the diff or requirement) and Tier 2 on demand, as in `plan.md`. Output must cite entity IDs.
-- **CI triage:** the existing triage agent gets the owner, known defects and flag state for the failing test's service, so a classification can cite "known defect X" or "owner is Y".
-- **Gap reports:** coverage mappings with a `gap` or no tests become a prioritised backlog.
-
-### Developer workflow
-- Ownership and dependency lookup replaces asking in chat.
-- Local environment specs (run commands, ports, flags, test data) feed the setup scripts, instead of the scripts holding the knowledge. In this repo, `scripts/start-demo.sh` and the pinned `DEMO_REF` are the first candidates to be driven from a spec.
-
-### Agent rules (go into the retrieval skill) [Recommendation]
-- Follow the documented retrieval path; do not load the whole repo.
-- Respect the source-of-truth registry.
-- Separate `verified` from `inferred` in every answer.
-- Report conflicts and missing metadata instead of resolving them silently.
-- Never conclude "no dependency" or "no test" from absence alone.
-- Propose; do not write to specs or tests without human approval.
-
----
-
-## 8. Concrete usage examples
-
-**Engineer, new to the shop's checkout:** `ctx show svc-checkout` returns owner, dependencies, flags, tests and known defects. Nothing is searched for by hand.
-
-**QA, a PR changes `.demo/src/currency/`:** `ctx tests-for --diff pr.patch` returns: currency API tests (automated), manual cases TC-CHK-02 and the payment cases, five known currency defects flagged as regression targets, and one unmapped file reported as a gap.
-
-**Test-gen agent, "generate tests for multi-currency checkout":** it loads the checkout and currency specs, the rule *price shown equals price charged*, the unsupported-currency defect pattern and the existing coverage mapping. It proposes boundary cases, an unsupported code, a zero-decimal currency, plus a fault-injection case via a flag. Each proposed case cites entity IDs, and cases already covered are marked as duplicates.
-
-**Triage agent, a checkout test fails with 504s:** it checks the environment spec and the known-defect list before deciding; the owner is attached to the report.
-
-**Product manager, "which tests cover the checkout use case?":** use case, features, coverage mapping and suites, in one traced answer. Gaps are shown explicitly.
-
-**Engineering lead, quarterly review:** a table of systems by readiness level, owners missing, and stale specs.
+**Critical path:** phases 1 to 3. If phase 3's evaluation doesn't show clear gains, stop adding systems and fix the specs or retrieval first.
 
 ---
 
@@ -300,57 +285,60 @@ Phases follow the concept document, adjusted to start from what already exists. 
 
 Measure outcomes, not file counts.
 
-| Metric | Baseline needed | Source |
-|---|---|---|
-| Systems at each readiness level | None (start at 0) | Validator |
-| Repos/services with a named owner | Inventory in phase 0 | Validator |
-| Features mapped to systems and tests | Phase 4 | Coverage mappings |
-| Time for a new engineer to run a system | Measure once before and after | Onboarding trial |
-| Time to find relevant regression tests | Measure by hand on 5 past changes | `tests-for` vs manual |
-| **Agent accuracy with vs without context** | Run both arms on the same inputs | Eval harness |
-| Share of agent answers with valid source refs | n/a | Eval harness |
-| Hallucinated endpoints/flags/services per 100 cases | Without-context arm | Eval harness |
-| Recall of known defects by generated tests | Held-out defect set | Eval harness |
-| Stale or conflicting specs | n/a | Staleness job |
-| Adoption: distinct users/agents querying per week | n/a | CLI telemetry |
+| Metric | How measured |
+|---|---|
+| Systems at each readiness level | Validator output |
+| Share of repos and services with a named owner | Validator |
+| Share of features mapped to systems and test suites | Coverage mappings |
+| Time for a new engineer to understand and run a system | Timed trial before and after |
+| Time to identify relevant regression tests | 5 past changes, by hand vs `ctx tests-for` |
+| **Agent accuracy with vs without the context** | Same questions, two arms, graded against known answers |
+| Share of agent answers with valid source references | Evaluation harness |
+| Wrong or invented services, owners and tests per 100 answers | Evaluation harness |
+| Stale or conflicting specs | Staleness job |
+| Weekly users and agent queries, by team | CLI and bot telemetry |
 
-**Evaluation method [Recommendation].** Reuse the `agentic/evals` approach: a labelled case set, an ablation (with vs without the pack), and a held-out split so tuning the pack to the cases does not inflate the score. Hide a defect's own entry when measuring recall of that defect. Report the sample sizes; the triage eval already shows that small sets give wide error bars.
+### Evaluation method [Recommendation]
+Build a labelled question set from real tasks ("who owns X", "which suites cover this diff", "what depends on Y"). Run the agent **with** and **without** the context repo. Keep a held-out portion so tuning the specs to the questions doesn't inflate the score. Report sample sizes and uncertainty; small sets give wide error bars.
 
-**Kill/continue checkpoint.** If after phase 3 the with-context arm is not clearly better, stop expanding and fix the pack or the retrieval before adding systems.
+**Checkpoint.** After phase 3, compare against baselines. If the gain isn't clear, pause expansion.
 
 ---
 
-## 10. Risks, trade-offs, open questions and decisions
+## 10. Risks and trade-offs
 
-### Risks and mitigations
 | Risk | Mitigation |
 |---|---|
-| Specs rot and mislead agents with confident wrong facts | Freshness checks in CI, `verified` levels, generators for anything derivable |
-| Maintenance burden causes teams to ignore it | Specs live next to code, minimal required fields, value delivered early through the CLI and CI |
-| Over-modelling before there is a use case | Entity types added only on demand; P2/P3 deferred |
-| Agents treat missing data as "does not exist" | Explicit `*_complete` flags and the agent rules in section 7 |
-| LLM-written narrative introduces errors | Source citations required; human review gate; `draft` status until reviewed |
-| Leaking test answers into the eval makes results look better than they are | Held-out split; hide the entry under test |
-| Confidential content (PII, secrets, customer data) in specs | Content rules in the contributor guide; secret scanning in CI [Assumption: needed in a real org] |
-| Tooling sprawl (MCP, graph, index) built too early | Gate on a written, measured limit of the simpler layer |
+| Specs go stale and mislead people and agents with confident wrong answers | Freshness checks, verified levels, generators for derivable facts |
+| Maintenance burden; teams ignore it | Minimal required fields, specs close to the owning team, quick wins (CLI, PR bot) that make updating worthwhile |
+| Over-modelling before a use case exists | Entities added on demand; P2 and P3 deferred |
+| Agents treat missing data as "doesn't exist" | Completeness flags and the agent rules in section 6 |
+| Model-written content introduces errors | Required citations, human review gate, `draft` status until reviewed |
+| Competes with or duplicates an existing catalogue or wiki | Reference it as a source of truth; don't replace it without a decision |
+| Sensitive information (secrets, personal or customer data) in specs | Content rules, secret scanning in CI, access control on the repo |
+| Infrastructure built too early (MCP, graph, index) | Gate on a measured limit of the simpler layer |
+| Evaluation flattered by leakage | Held-out questions; hide the answer entry under test |
 
 ### Trade-offs
-- **Central repo vs specs beside code.** Central is easier to search and govern; beside-code keeps specs accurate. Recommended: schemas central, specs beside code, once there is more than one system.
-- **Generated vs curated.** Generated is accurate but shallow; curated is deep but decays. Recommended: generate the facts, curate the judgement.
-- **Strict vs lenient schemas.** Strict gives reliable tools but slows contributors. Recommended: strictness rises with readiness level.
+- **Central vs beside-code.** Central is easier to search and govern; beside-code is more accurate. Start central, move to hybrid.
+- **Generated vs curated.** Generated is accurate but shallow; curated is deep but decays. Generate facts, curate judgement.
+- **Strict vs lenient schemas.** Strict makes tools reliable but slows contributors. Raise strictness with readiness level.
 
-### Open questions (need your input)
-1. Is the target a real organization or the assignment as a demonstration? If real, how many systems, teams and repos? What documentation and metadata already exist, and where?
-2. Who are the stakeholders and the first sponsor? Who owns the platform itself?
-3. Which use case ranks first: test generation, test selection, triage, onboarding, or something else?
-4. Is the shop pilot the right pilot, or should a second, more representative system come first?
-5. Is there an existing service catalogue or documentation system (a developer portal, wiki or CMDB) that must stay the source of truth, in which case this platform references it rather than replacing it?
-6. What are the data-sensitivity and access constraints for specs and for what agents may read?
-7. Which agent runtime and access method is standard (Claude Code, an internal agent, an IDE assistant)? That decides whether a skill, CLI or MCP server comes first.
+---
 
-### Decisions needed from stakeholders
-- Pilot system and sponsor.
-- Top use case and the baseline to measure against.
-- Repository model: central, beside-code, or hybrid.
+## 11. Open questions and decisions for stakeholders
+
+### Questions
+1. How many systems, teams and repos are there, and where does knowledge live today (wiki, service catalogue, tickets)?
+2. Which use case ranks first: finding owners and dependencies, test selection, test generation, onboarding, or something else?
+3. Is there an existing developer portal or catalogue that must remain the source of truth?
+4. What are the confidentiality and access rules for what's stored and what agents may read?
+5. Which agent runtime or assistant is standard, so the first access layer matches it?
+6. Who sponsors this, and who maintains the platform?
+
+### Decisions needed
+- Pilot systems and sponsor.
+- First use case and the baseline to measure against.
+- Central, beside-code or hybrid repository model.
 - Readiness level the pilot must reach, and by when.
-- Whether this platform supersedes or integrates with existing documentation systems.
+- Whether this integrates with or supersedes existing documentation systems.
